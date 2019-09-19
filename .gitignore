@@ -1,4 +1,9 @@
-map.dat
-map.pgm
+# no result files from execution
+**/*.dat
+**/*.pgm
+
+# no executable
 percolate
+
+# no fortran module files
 **/*.mod
