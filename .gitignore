@@ -3,7 +3,10 @@
 **/*.pgm
 
 # no executable
-percolate
+main
 
 # no fortran module files
 **/*.mod
+
+# no helper script for displaying .pgm files
+display.sh
