@@ -13,6 +13,8 @@ module map_class
     procedure :: build_clusters
     procedure :: does_percolate_horizontically
     procedure :: inner
+    procedure, private :: free_random_cells_and_set_true_density
+    procedure, private :: set_cell_to_max_neighbor
   end type
 
   interface Map
@@ -25,24 +27,32 @@ contains
     integer, intent(in) :: inner_size
     real,    intent(in) :: density
 
-    integer :: free_cell_counter, i, j
-
     allocate(self%map(0:inner_size + 1, 0:inner_size + 1))
     self%map(:, :) = 0
 
-    free_cell_counter = 0
-    do i = 1, inner_size
-      do j = 1, inner_size
+    self%inner_size = inner_size
+
+    call self%free_random_cells_and_set_true_density(density)
+  end
+
+  subroutine free_random_cells_and_set_true_density(self, density)
+    class(Map), intent(inout) :: self
+    real,       intent(in)    :: density
+
+    integer :: free_cell_count, i, j
+
+    free_cell_count = 0
+    do i = 1, self%inner_size
+      do j = 1, self%inner_size
         if (random_uniform() > density) then
-          free_cell_counter = free_cell_counter + 1
-          self%map(i, j) = free_cell_counter
+          free_cell_count = free_cell_count + 1
+          self%map(i, j) = free_cell_count
         end if
       end do
     end do
 
-    self%inner_size   = inner_size
-    self%true_density = float(free_cell_counter) &
-                      / float(inner_size ** 2)
+    self%true_density = float(free_cell_count) &
+                      / float(self%inner_size ** 2)
   end
 
   function build_clusters(self) result(changes_per_iteration)
@@ -50,30 +60,22 @@ contains
     integer, dimension(:), allocatable :: changes_per_iteration
 
     integer, dimension(:),    allocatable :: changes_per_iteration_temp
-    integer, dimension(:, :), allocatable :: left, right, top, bottom, old_map
+    integer, dimension(:, :), allocatable :: old_map
 
     integer :: changes, i, max_iter
 
-    allocate(left, right, top, bottom, old_map, mold = self%map)
+    allocate(old_map, mold = self%map)
 
-    max_iter = self%inner_size * 2
+    ! manhattan distance from one end of the matrix diagonal to the
+    ! other
+    max_iter = self%inner_size * 2 - 1
     allocate(changes_per_iteration_temp(max_iter))
 
     do i = 1, max_iter
       changes = 0
       old_map = self%map
 
-      left   = cshift(self%map, shift = -1, dim = 1)
-      right  = cshift(self%map, shift = 1,  dim = 1)
-      top    = cshift(self%map, shift = -1, dim = 2)
-      bottom = cshift(self%map, shift = 1,  dim = 2)
-
-      where (self%map /= 0)
-        where (self%map < left)   self%map = left
-        where (self%map < right)  self%map = right
-        where (self%map < top)    self%map = top
-        where (self%map < bottom) self%map = bottom
-      end where
+      call self%set_cell_to_max_neighbor()
 
       changes = sum(self%map - old_map)
       changes_per_iteration_temp(i) = changes
@@ -84,8 +86,20 @@ contains
     allocate(changes_per_iteration(i))
     changes_per_iteration(:) = changes_per_iteration_temp(:i)
 
-    deallocate(left, right, top, bottom, old_map)
+    deallocate(old_map)
     deallocate(changes_per_iteration_temp)
+  end
+
+  subroutine set_cell_to_max_neighbor(self)
+    class(Map), intent(inout) :: self
+
+    where (self%map /= 0)
+      self%map = max( cshift(self%map, shift=-1, dim=1) &
+                    , cshift(self%map, shift= 1, dim=1) &
+                    , cshift(self%map, shift=-1, dim=2) &
+                    , cshift(self%map, shift= 1, dim=2) &
+                    , self%map )
+    end where
   end
 
   logical function does_percolate_horizontically(self, cluster_num) &
@@ -94,16 +108,21 @@ contains
     class(Map), intent(in) :: self
     integer, optional, intent(out) :: cluster_num
 
-    integer :: i, j
+    integer :: i, j, MAX_ITER
+    integer, dimension(self%inner_size) :: first_col, last_col
 
+    MAX_ITER       = self%inner_size
     cluster_num    = 0
     does_percolate = .false.
 
-    do i = 1, self%inner_size
-      if (self%map(i, 1) > 0) then
-        do j = 1, self%inner_size
-          if (self%map(i, 1) == self%map(j, self%inner_size)) then
-            cluster_num = self%map(i, 1)
+    first_col = self%map(:, 1)
+    last_col  = self%map(:, MAX_ITER)
+
+    do i = 1, MAX_ITER
+      if (first_col(i) > 0) then
+        do j = 1, MAX_ITER
+          if (first_col(i) == last_col(j)) then
+            cluster_num = first_col(i)
             does_percolate = .true.
             exit
           end if
@@ -115,6 +134,7 @@ contains
   function inner(self) result(inner_map)
     class(Map), intent(in) :: self
     integer, dimension(self%inner_size, self%inner_size) :: inner_map
+
     inner_map = self%map(1:self%inner_size, 1:self%inner_size)
   end
 end

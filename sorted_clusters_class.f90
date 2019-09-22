@@ -1,13 +1,22 @@
 module sorted_clusters_class
+  use map_class
 
   implicit none
 
   private
 
   type, public :: SortedClusters
-    integer, dimension(:, :), allocatable :: clusters
-    integer :: clusters_count = 0
-    integer :: max_cluster_size
+    integer, dimension(:), allocatable :: cluster_ids
+    integer, dimension(:), allocatable :: cluster_sizes
+    integer :: amount_of_clusters = 0
+
+    integer, private :: size
+  contains
+    procedure, private :: init_clusters
+    procedure, private :: set_amount_of_clusters
+    procedure, private :: quick_sort
+    procedure, private :: partition
+    procedure, private :: swap
   end type
 
   interface SortedClusters
@@ -16,107 +25,108 @@ module sorted_clusters_class
 
 contains
 
-  type(SortedClusters) function new(map) result(self)
-    integer, dimension(:, :), intent(in) :: map
+  type(SortedClusters) function new(m) result(self)
+    type(Map), intent(in) :: m
 
-    integer :: i, j, L
-    L = size(map, dim=1)
+    call self%init_clusters(m)
 
-    allocate(self%clusters(2, size(map)))
+    call self%quick_sort(1, self%size)
 
-    self%clusters(1, :) = 0
-    self%clusters(2, :) = (/ (i, i = 1, L * L) /)
+    call self%set_amount_of_clusters()
+  end
 
-    forall (i = 1:L, j = 1:L, map(i, j) > 0)
-      self%clusters(1, map(i, j)) = &
-        self%clusters(1, map(i, j)) + 1
+  subroutine init_clusters(self, m)
+    class(SortedClusters), intent(inout) :: self
+    type(Map), intent(in) :: m
+
+    integer :: i, j, MAX_ITER
+
+    MAX_ITER  = m%inner_size
+    self%size = m%inner_size ** 2
+
+    allocate(self%cluster_ids(self%size))
+    allocate(self%cluster_sizes(self%size))
+
+    self%cluster_sizes(:) = 0
+    self%cluster_ids(:)   = (/ (i, i = 1, self%size) /)
+
+    forall (i = 1:MAX_ITER, j = 1:MAX_ITER, m%map(i, j) > 0)
+      self%cluster_sizes(m%map(i, j)) = &
+        self%cluster_sizes(m%map(i, j)) + 1
     end forall
+  end
 
-    call clustlist_sort(self%clusters, size(map))
+  subroutine set_amount_of_clusters(self)
+    class(SortedClusters), intent(inout) :: self
+    integer :: i
 
-    do i = 1, L * L
-      if (self%clusters(1, i) > 0) then
-        self%clusters_count = i
+    do i = 1, self%size
+      if (self%cluster_sizes(i) > 0) then
+        self%amount_of_clusters = i
       else
         exit
       end if
     end do
-
-    self%max_cluster_size = self%clusters(1, 1)
   end
 
-  subroutine clustlist_sort(clustlist, n)
+  recursive subroutine quick_sort(self, begin, end)
+    class(SortedClusters), intent(inout) :: self
+    integer, intent(in) :: begin, end
 
-    integer,                  intent(in)    :: n
-    integer, dimension(2, n), intent(inout) :: clustlist
-
-    integer, parameter  :: intsize = 4
-
-    call sort(clustlist, 1, n, n)
-
-  end
-
-  recursive subroutine sort(clustlist, begin, end, n)
-
-    integer, intent(in) :: begin, end, n
-    integer, dimension(2, n), intent(inout) :: clustlist
-
-    integer pivot1, pivot2, left, right, pivotindex
-
-    pivotindex = begin + (end - begin)/2
+    integer pivotindex
+    pivotindex = begin + (end - begin) / 2
 
     if (end > begin) then
-      call partition(clustlist, begin, end, pivotindex, n)
-      call sort(clustlist, begin, pivotindex - 1, n)
-      call sort(clustlist, pivotindex + 1, end, n)
+      call self%partition(begin, end, pivotindex)
+      call self%quick_sort(begin, pivotindex - 1)
+      call self%quick_sort(pivotindex + 1, end)
     end if
   end
 
-  subroutine partition(clustlist, begin, end, pivotindex, n)
+  subroutine partition(self, begin, end, pivotindex)
+    class(SortedClusters), intent(inout) :: self
 
-    integer, intent(in) :: begin, end, n
+    integer, intent(in) :: begin, end
     integer, intent(inout) :: pivotindex
-    integer, dimension(2, n), intent(inout) :: clustlist
 
-    integer pivot1, pivot2, left, right, i, indexpoint
+    integer pivot_id, pivot_size, left, right, i, indexpoint
 
-    pivot1 = clustlist(1, pivotindex)
-    pivot2 = clustlist(2, pivotindex)
-    call swap(clustlist, end, pivotindex, n)
+    pivot_id   = self%cluster_ids(pivotindex)
+    pivot_size = self%cluster_sizes(pivotindex)
+    call self%swap(end, pivotindex)
 
     left = begin
     right = end - 1
     indexpoint = left
 
     do i = left, right
-      if (clustlist(1, i) .ge. pivot1) then
-        if (clustlist(1, i) .eq. pivot1 .and. clustlist(2, i) .lt. pivot2) then
-        else
-          call swap(clustlist, i, indexpoint, n)
+      if (self%cluster_sizes(i) .ge. pivot_size) then
+        if ( .not. (self%cluster_sizes(i) .eq. pivot_size &
+               .and. self%cluster_ids(i) .lt. pivot_id)) then
+          call self%swap(i, indexpoint)
           indexpoint = indexpoint + 1
         end if
       end if
     end do
 
-    call swap(clustlist, indexpoint, end, n)
+    call self%swap(indexpoint, end)
 
     pivotindex = indexpoint
-
   end
 
-  subroutine swap(clustlist, firstpoint, secondpoint, n)
+  subroutine swap(self, idx_1, idx_2)
+    class(SortedClusters), intent(inout) :: self
+    integer, intent(in) :: idx_1, idx_2
 
-    integer, intent(in) :: firstpoint, secondpoint, n
-    integer, dimension(2, n), intent(inout) :: clustlist
+    integer :: temp_id, temp_size
 
-    integer :: tempdata1, tempdata2
+    temp_id   = self%cluster_ids(idx_1)
+    temp_size = self%cluster_sizes(idx_1)
 
-    tempdata1 = clustlist(1, firstpoint)
-    tempdata2 = clustlist(2, firstpoint)
-    clustlist(1, firstpoint) = clustlist(1, secondpoint)
-    clustlist(2, firstpoint) = clustlist(2, secondpoint)
-    clustlist(1, secondpoint) = tempdata1
-    clustlist(2, secondpoint) = tempdata2
+    self%cluster_ids(idx_1)   = self%cluster_ids(idx_2)
+    self%cluster_sizes(idx_1) = self%cluster_sizes(idx_2)
 
+    self%cluster_ids(idx_2)   = temp_id
+    self%cluster_sizes(idx_2) = temp_size
   end
 end

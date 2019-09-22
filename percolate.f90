@@ -1,6 +1,6 @@
 program percolate
-  use sorted_clusters_class
   use map_class
+  use sorted_clusters_class
   use color_map_class
   use files
   use uni
@@ -57,13 +57,13 @@ program percolate
   changes_per_iteration = m%build_clusters()
   does_percolate        = m%does_percolate_horizontically(cluster_num)
 
-  clustlist = SortedClusters(m%inner())
+  clustlist = SortedClusters(m)
 
-  if (amount_of_clusters > clustlist%clusters_count) then
-    amount_of_clusters = clustlist%clusters_count
+  if (amount_of_clusters > clustlist%amount_of_clusters) then
+    amount_of_clusters = clustlist%amount_of_clusters
   end if
 
-  colors = ColorMap(m, clustlist%clusters(2, :), amount_of_clusters)
+  colors = ColorMap(m, clustlist%cluster_ids, amount_of_clusters)
 
   write (*, *) 'Parameters are rho=', rho, ', L=', L, ', seed=', seed
   write (*, *) 'rho = ', rho, ', actual density = ', m%true_density
@@ -81,12 +81,12 @@ program percolate
 
   call write_data_file(datafile, m%inner())
 
-  write (*, *) 'Map has ', clustlist%clusters_count, &
-    ' clusters, maximum cluster size is ', clustlist%max_cluster_size
+  write (*, *) 'Map has ', clustlist%amount_of_clusters, &
+    ' clusters, maximum cluster size is ', clustlist%cluster_sizes(1)
 
   if (amount_of_clusters == 1) then
     write (*, *) 'Displaying the largest cluster'
-  else if (amount_of_clusters == clustlist%clusters_count) then
+  else if (amount_of_clusters == clustlist%amount_of_clusters) then
     write (*, *) 'Displaying all clusters'
   else
     write (*, *) 'Displaying largest ', amount_of_clusters, ' clusters'
