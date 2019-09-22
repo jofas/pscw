@@ -1,25 +1,62 @@
-module sort
+module sorted_clusters_class
 
   implicit none
 
   private
 
-  public :: clustlist_sort
+  type, public :: SortedClusters
+    integer, dimension(:, :), allocatable :: clusters
+    integer :: clusters_count = 0
+    integer :: max_cluster_size
+  end type
+
+  interface SortedClusters
+    module procedure new
+  end interface
 
 contains
 
+  type(SortedClusters) function new(map) result(self)
+    integer, dimension(:, :), intent(in) :: map
+
+    integer :: i, j, L
+    L = size(map, dim=1)
+
+    allocate(self%clusters(2, size(map)))
+
+    self%clusters(1, :) = 0
+    self%clusters(2, :) = (/ (i, i = 1, L * L) /)
+
+    forall (i = 1:L, j = 1:L, map(i, j) > 0)
+      self%clusters(1, map(i, j)) = &
+        self%clusters(1, map(i, j)) + 1
+    end forall
+
+    call clustlist_sort(self%clusters, size(map))
+
+    do i = 1, L * L
+      if (self%clusters(1, i) > 0) then
+        self%clusters_count = i
+      else
+        exit
+      end if
+    end do
+
+    self%max_cluster_size = self%clusters(1, 1)
+  end
+
   subroutine clustlist_sort(clustlist, n)
 
-    integer, intent(in)                    :: n
+    integer,                  intent(in)    :: n
     integer, dimension(2, n), intent(inout) :: clustlist
 
     integer, parameter  :: intsize = 4
 
-    call sort_(clustlist, 1, n, n)
+    call sort(clustlist, 1, n, n)
 
   end
 
-  recursive subroutine sort_(clustlist, begin, end, n)
+  recursive subroutine sort(clustlist, begin, end, n)
 
     integer, intent(in) :: begin, end, n
     integer, dimension(2, n), intent(inout) :: clustlist
@@ -30,8 +67,8 @@ contains
 
     if (end > begin) then
       call partition(clustlist, begin, end, pivotindex, n)
-      call sort_(clustlist, begin, pivotindex - 1, n)
-      call sort_(clustlist, pivotindex + 1, end, n)
+      call sort(clustlist, begin, pivotindex - 1, n)
+      call sort(clustlist, pivotindex + 1, end, n)
     end if
   end
 

@@ -1,6 +1,9 @@
 program percolate
-  use sort
-  use util
+  use sorted_clusters_class
+  use map_class
+  use color_map_class
+  use files
+  use uni
 
   implicit none
 
@@ -28,23 +31,12 @@ program percolate
   ! CLI PARAM
   character(:), allocatable :: percfile
 
-  ! the grid
-  integer, dimension(:, :), allocatable :: map
+  type(Map) :: m
+  type(ColorMap) :: colors
 
-  integer :: i, j
+  integer :: i
 
-  integer :: ncluster, max_cluster_size
-  integer, parameter :: fmtlen = 32
-  character(len=fmtlen)  :: fmtstring
-  integer, dimension(:), allocatable :: fileline
-  integer, dimension(:, :), allocatable :: clustlist
-  integer :: iounit = 12
-  integer, dimension(:), allocatable :: color
-
-  integer, dimension(:), allocatable :: cluster_rank
-  integer :: color_from_rank
-
-  real :: density
+  type(SortedClusters) :: clustlist
 
   integer, dimension(:), allocatable :: changes_per_iteration
 
@@ -60,13 +52,21 @@ program percolate
   amount_of_clusters = L * L
 
   call rinit(seed)
-  call init_map(L, rho, map, density)
-  call build_clusters(map, changes_per_iteration)
-  call does_percolate_horizontically(map, cluster_num, does_percolate)
+
+  m                     = Map(L, rho)
+  changes_per_iteration = m%build_clusters()
+  does_percolate        = m%does_percolate_horizontically(cluster_num)
+
+  clustlist = SortedClusters(m%inner())
+
+  if (amount_of_clusters > clustlist%clusters_count) then
+    amount_of_clusters = clustlist%clusters_count
+  end if
+
+  colors = ColorMap(m, clustlist%clusters(2, :), amount_of_clusters)
 
   write (*, *) 'Parameters are rho=', rho, ', L=', L, ', seed=', seed
-
-  write (*, *) 'rho = ', rho, ', actual density = ', density
+  write (*, *) 'rho = ', rho, ', actual density = ', m%true_density
 
   do i = 1, size(changes_per_iteration)
     write (*, *) 'Number of changes on loop ', i, ' is ', &
@@ -79,107 +79,18 @@ program percolate
     write (*, *) 'Cluster DOES NOT percolate'
   end if
 
-  ! this part writes data file {{{
+  call write_data_file(datafile, m%inner())
 
-  write (*, *) 'Opening file ', datafile
-  open (unit=iounit, file=datafile)
-  write (*, *) 'Writing data ...'
-
-  write (fmtstring, fmt='(''('', i3, ''(1x, I4))'')') L
-
-  do j = L, 1, -1
-    write (iounit, fmt=fmtstring) map(:, j)
-  end do
-
-  write (*, *) '...done'
-  close (iounit)
-  write (*, *) 'File closed'
-
-  ! }}}
-
-  ! does something with the clusters
-  allocate (clustlist(2, L*L))
-
-  clustlist(1, :) = 0
-  clustlist(2, :) = (/ (i, i = 1, L * L) /)
-
-  forall (i = 1:L, j = 1:L, map(i, j) > 0)
-     clustlist(1, map(i, j)) = clustlist(1, map(i, j)) + 1
-  end forall
-
-  call clustlist_sort(clustlist, L * L)
-
-  ncluster = 0
-  do while (ncluster < L*L .and. clustlist(1, ncluster + 1) > 0)
-    ncluster = ncluster + 1
-  end do
-
-  if (amount_of_clusters > ncluster) then
-    amount_of_clusters = ncluster
-  end if
-
-  allocate(cluster_rank(L * L))
-  do i = 1, ncluster
-    cluster_rank(clustlist(2, i)) = i
-  end do
-
-  max_cluster_size = clustlist(1, 1)
-
-  ! some stdout statistics about clusters {{{
-  write (*, *) 'Map has ', ncluster, &
-    ' clusters, maximum cluster size is ', max_cluster_size
+  write (*, *) 'Map has ', clustlist%clusters_count, &
+    ' clusters, maximum cluster size is ', clustlist%max_cluster_size
 
   if (amount_of_clusters == 1) then
     write (*, *) 'Displaying the largest cluster'
-  else if (amount_of_clusters == ncluster) then
+  else if (amount_of_clusters == clustlist%clusters_count) then
     write (*, *) 'Displaying all clusters'
   else
     write (*, *) 'Displaying largest ', amount_of_clusters, ' clusters'
   end if
-  ! }}}
 
-  deallocate(clustlist)
-
-  write (*, *) 'Opening file ', percfile
-  open (unit=iounit, file=percfile)
-  write (*, *) 'Writing data ...'
-
-  ! write .pgm header {{{
-  write (fmtstring, fmt='(''('', i3, ''(1x, I4))'')') L
-
-  write (iounit, fmt='(''P2'')')
-
-  write (iounit, *) L, L
-
-  if (amount_of_clusters > 0) then
-    write (iounit, *) amount_of_clusters
-  else
-    write (iounit, *) 1
-  end if
-  ! }}}
-
-  ! write .pgm data {{{
-  allocate(color(L))
-
-  do j = L, 1, -1
-    color(:) = amount_of_clusters
-    do i = 1, L
-      color_from_rank = cluster_rank(map(i, j)) - 1
-      if (map(i, j) > 0 .and. color_from_rank < amount_of_clusters) then
-        color(i) = cluster_rank(map(i, j)) - 1
-      end if
-    end do
-    write (iounit, fmt=fmtstring) color
-  end do
-
-  deallocate(color)
-  deallocate (cluster_rank)
-  ! }}}
-
-  write (*, *) '...done'
-  close (iounit)
-  write (*, *) 'File closed'
-
-  deallocate (map)
+  call write_pgm_file(percfile, colors%color_map, amount_of_clusters)
 end
-
