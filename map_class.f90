@@ -64,7 +64,7 @@ contains
 
     integer :: changes, i, max_iter
 
-    allocate(old_map, mold = self%map)
+    allocate(old_map(self%inner_size + 2, self%inner_size + 2))
 
     ! manhattan distance from one end of the matrix diagonal to the
     ! other
