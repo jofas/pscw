@@ -8,8 +8,9 @@ module color_map_class
   type, public :: ColorMap
     !
     ! Object mapping every inner cell of a Map instance to
-    ! color used in the .pgm file
+    ! color used in the .pgm file.
     !
+
     integer, dimension(:, :), allocatable :: color_map
   contains
     procedure, private :: build_color_map

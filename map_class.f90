@@ -6,6 +6,11 @@ module map_class
   private
 
   type, public :: Map
+    !
+    ! Object implementing the matrix and the perculation
+    ! operation based on it.
+    !
+
     integer, dimension(:, :), allocatable :: map
     integer :: inner_size
     real    :: true_density
@@ -24,6 +29,12 @@ module map_class
 contains
 
   type(Map) function new(inner_size, density) result(self)
+    !
+    ! Constructor function for a Map instance.
+    !
+    ! Populates itself with full and empty cells.
+    !
+
     integer, intent(in) :: inner_size
     real,    intent(in) :: density
 
@@ -36,6 +47,10 @@ contains
   end
 
   subroutine free_random_cells_and_set_true_density(self, density)
+    !
+    ! Subroutine initializing self randomly with free cells.
+    !
+
     class(Map), intent(inout) :: self
     real,       intent(in)    :: density
 
@@ -56,6 +71,17 @@ contains
   end
 
   function build_clusters(self) result(changes_per_iteration)
+    !
+    ! Subroutine for building the clusters.
+    !
+    ! Every empty cell is compared to its neighbors and is
+    ! set to the max value of them/itself. This is done so
+    ! many times till no more changes happe in an iteration.
+    !
+    ! Afterwards the cells with the same value build a
+    ! cluster.
+    !
+
     class(Map), intent(inout) :: self
     integer, dimension(:), allocatable :: changes_per_iteration
 
@@ -104,6 +130,14 @@ contains
 
   logical function does_percolate_horizontically(self, cluster_num) &
       result(does_percolate)
+    !
+    ! Function testing if a cluster percolates from the
+    ! left most column to the right most.
+    !
+    ! It is just checked, whether the first column contains
+    ! any value from the last column. If so, the cluster
+    ! with the value percolates.
+    !
 
     class(Map), intent(in) :: self
     integer, optional, intent(out) :: cluster_num
@@ -132,6 +166,15 @@ contains
   end
 
   function inner(self) result(inner_map)
+    !
+    ! Function returning the inner representation of the
+    ! map.
+    !
+    ! This method is needed, because, for computational
+    ! reasons, the matrix is embedded into a halo of full
+    ! cells, which is removed invoking this function.
+    !
+
     class(Map), intent(in) :: self
     integer, dimension(self%inner_size, self%inner_size) :: inner_map
 
