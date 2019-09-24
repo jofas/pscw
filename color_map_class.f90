@@ -39,7 +39,7 @@ contains
     !
     ! Therfore, every full cell and every cell not con-
     ! tained in one of the n_biggest_clusters is displayed
-    ! with the lightest color.
+    ! with the lightest color (n_biggest_clusters).
     !
 
     type(Map), intent(in) :: m
@@ -56,6 +56,7 @@ contains
 
     call self%build_color_map(m, n_biggest_clusters, cluster_ranking)
   end
+
 
   subroutine build_cluster_ranking( &
     cluster_sizes, n_biggest_clusters, cluster_ranking &
@@ -79,6 +80,7 @@ contains
       cluster_ranking(cluster_sizes(i)) = i - 1
     end do
   end
+
 
   subroutine build_color_map( &
     self, m, n_biggest_clusters, cluster_ranking &
@@ -109,6 +111,7 @@ contains
       self%color_map(i, j) = cluster_ranking(m%map(i, j))
     end forall
   end
+
 
   pure logical function cluster_in_bound( &
     i, j, n_biggest_clusters, m, cluster_ranking &

@@ -1,96 +1,81 @@
 program percolate
+  !
+  ! Program percolate.
+  !
+  ! This program searches clusters in a L x L matrix that
+  ! percolate. A cell is either full (0) or empty
+  ! (1 ... |empty cells|). A cell has 4 neighbor cells and
+  ! builds a cluster with them (and therefore with their
+  ! neighbors' neighbors, making it a recursive relation-
+  ! ship). A cluster percolates, if such a cluster starts
+  ! from the left most column and finds its way to the
+  ! right most column.
+  !
+
   use map_class
   use sorted_clusters_class
   use color_map_class
-  use files
+  use output
   use uni
 
   implicit none
 
-  ! dimensions of grid
-  ! CLI PARAM
-  integer :: L
+  integer :: matrix_dimension, seed, print_n_clusters
+  real :: density_of_filled_cells
 
-  ! density of filled cells (cells not part of a cluster)
-  ! CLI PARAM
-  real :: rho
-
-  ! seed for pseudo random number generator
-  ! CLI PARAM
-  integer :: seed
-
-  ! amount of clusters shown in the graphics file
-  ! CLI PARAM
-  integer :: amount_of_clusters
-
-  ! name of data file
-  ! CLI PARAM
-  character(:), allocatable :: datafile
-
-  ! name of graphics file
-  ! CLI PARAM
-  character(:), allocatable :: percfile
+  character(:), allocatable :: data_file_path, pgm_file_path
 
   type(Map) :: m
   type(ColorMap) :: colors
-
-  integer :: i
-
   type(SortedClusters) :: clustlist
 
   integer, dimension(:), allocatable :: changes_per_iteration
-
   integer :: cluster_num
   logical :: does_percolate
 
   ! DEFAULTS FOR CLI
-  L = 20
-  rho = 0.40
+  matrix_dimension = 20
+  density_of_filled_cells = 0.40
   seed = 1564
-  datafile = 'map.dat'
-  percfile = 'map.pgm'
-  amount_of_clusters = L * L
+  data_file_path = 'map.dat'
+  pgm_file_path  = 'map.pgm'
+  print_n_clusters = matrix_dimension ** 2
 
   call rinit(seed)
 
-  m                     = Map(L, rho)
+  m = Map(matrix_dimension, density_of_filled_cells)
+
   changes_per_iteration = m%build_clusters()
-  does_percolate        = m%does_percolate_horizontically(cluster_num)
+
+  does_percolate = m%does_percolate_horizontically(cluster_num)
 
   clustlist = SortedClusters(m)
 
-  if (amount_of_clusters > clustlist%amount_of_clusters) then
-    amount_of_clusters = clustlist%amount_of_clusters
+  if (print_n_clusters > clustlist%amount_of_clusters) then
+    print_n_clusters = clustlist%amount_of_clusters
   end if
 
-  colors = ColorMap(m, clustlist%cluster_ids, amount_of_clusters)
+  colors = ColorMap(m, clustlist%cluster_ids, print_n_clusters)
 
-  write (*, *) 'Parameters are rho=', rho, ', L=', L, ', seed=', seed
-  write (*, *) 'rho = ', rho, ', actual density = ', m%true_density
+  call print_params_and_actual_density( &
+    density_of_filled_cells, matrix_dimension, seed, m%true_density &
+  )
 
-  do i = 1, size(changes_per_iteration)
-    write (*, *) 'Number of changes on loop ', i, ' is ', &
-      changes_per_iteration(i)
-  end do
+  call print_iterations(changes_per_iteration)
 
-  if (does_percolate) then
-    write (*, *) 'Cluster DOES percolate. Cluster number: ', cluster_num
-  else
-    write (*, *) 'Cluster DOES NOT percolate'
-  end if
+  call print_percolation_status(does_percolate, cluster_num)
 
-  call write_data_file(datafile, m%inner())
+  call write_data_file(data_file_path, m%inner())
 
-  write (*, *) 'Map has ', clustlist%amount_of_clusters, &
-    ' clusters, maximum cluster size is ', clustlist%cluster_sizes(1)
+  call print_amount_of_clusters_and_size_of_biggest( &
+    clustlist%amount_of_clusters, clustlist%cluster_sizes(1) &
+  )
 
-  if (amount_of_clusters == 1) then
-    write (*, *) 'Displaying the largest cluster'
-  else if (amount_of_clusters == clustlist%amount_of_clusters) then
-    write (*, *) 'Displaying all clusters'
-  else
-    write (*, *) 'Displaying largest ', amount_of_clusters, ' clusters'
-  end if
+  call print_amount_of_displayed_clusters( &
+    print_n_clusters, clustlist%amount_of_clusters &
+  )
 
-  call write_pgm_file(percfile, colors%color_map, amount_of_clusters)
+  call write_pgm_file( &
+    pgm_file_path, colors%color_map, print_n_clusters &
+  )
 end
