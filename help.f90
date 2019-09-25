@@ -1,4 +1,9 @@
 module help
+  !
+  ! Module containing the message which is displayed when
+  ! invoking the -h, --help option from the command line.
+  !
+
   character(len=53), dimension(39) :: HELP_MSG = (/ &
   "percolate v0.1.0                                    ", &
   "                                                    ", &
