@@ -11,6 +11,11 @@ program percolate
   ! from the left most column and finds its way to the
   ! right most column.
   !
+  ! It should be noted here, that, while the percolation is
+  ! searched from left to right, the output files genera-
+  ! ted, display the matix bottom to top. That means, the
+  ! last column is displayed as the first row.
+  !
 
   use map_class
   use sorted_clusters_class
@@ -27,7 +32,7 @@ program percolate
 
   type(Map) :: m
   type(ColorMap) :: colors
-  type(SortedClusters) :: clustlist
+  type(SortedClusters) :: sorted_clusters
 
   integer, dimension(:), allocatable :: changes_per_iteration
   integer :: cluster_num
@@ -49,13 +54,13 @@ program percolate
 
   does_percolate = m%does_percolate_horizontically(cluster_num)
 
-  clustlist = SortedClusters(m)
+  sorted_clusters = SortedClusters(m)
 
-  if (print_n_clusters > clustlist%amount_of_clusters) then
-    print_n_clusters = clustlist%amount_of_clusters
+  if (print_n_clusters > sorted_clusters%amount_of_clusters) then
+    print_n_clusters = sorted_clusters%amount_of_clusters
   end if
 
-  colors = ColorMap(m, clustlist%cluster_ids, print_n_clusters)
+  colors = ColorMap(m, sorted_clusters%cluster_ids, print_n_clusters)
 
   call print_params_and_actual_density( &
     density_of_filled_cells, matrix_dimension, seed, m%true_density &
@@ -68,11 +73,12 @@ program percolate
   call write_data_file(data_file_path, m%inner())
 
   call print_amount_of_clusters_and_size_of_biggest( &
-    clustlist%amount_of_clusters, clustlist%cluster_sizes(1) &
+    sorted_clusters%amount_of_clusters, &
+    sorted_clusters%cluster_sizes(1)    &
   )
 
   call print_amount_of_displayed_clusters( &
-    print_n_clusters, clustlist%amount_of_clusters &
+    print_n_clusters, sorted_clusters%amount_of_clusters &
   )
 
   call write_pgm_file( &
