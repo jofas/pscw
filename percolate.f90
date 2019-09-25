@@ -20,16 +20,12 @@ program percolate
   use map_class
   use sorted_clusters_class
   use color_map_class
-  use output
+  use io
   use uni
 
   implicit none
 
-  integer :: matrix_dimension, seed, print_n_clusters
-  real :: density_of_filled_cells
-
-  character(:), allocatable :: data_file_path, pgm_file_path
-
+  type(CLIResults) :: cli
   type(Map) :: m
   type(ColorMap) :: colors
   type(SortedClusters) :: sorted_clusters
@@ -38,17 +34,11 @@ program percolate
   integer :: cluster_num
   logical :: does_percolate
 
-  ! DEFAULTS FOR CLI
-  matrix_dimension = 20
-  density_of_filled_cells = 0.40
-  seed = 1564
-  data_file_path = 'map.dat'
-  pgm_file_path  = 'map.pgm'
-  print_n_clusters = matrix_dimension ** 2
+  cli = read_from_cli()
 
-  call rinit(seed)
+  call rinit(cli%seed)
 
-  m = Map(matrix_dimension, density_of_filled_cells)
+  m = Map(cli%matrix_dimension, cli%density_of_filled_cells)
 
   changes_per_iteration = m%build_clusters()
 
@@ -56,21 +46,24 @@ program percolate
 
   sorted_clusters = SortedClusters(m)
 
-  if (print_n_clusters > sorted_clusters%amount_of_clusters) then
-    print_n_clusters = sorted_clusters%amount_of_clusters
+  if (cli%print_n_clusters > sorted_clusters%amount_of_clusters) then
+    cli%print_n_clusters = sorted_clusters%amount_of_clusters
   end if
 
-  colors = ColorMap(m, sorted_clusters%cluster_ids, print_n_clusters)
+  colors = ColorMap( &
+    m, sorted_clusters%cluster_ids, cli%print_n_clusters &
+  )
 
   call print_params_and_actual_density( &
-    density_of_filled_cells, matrix_dimension, seed, m%true_density &
+    cli%density_of_filled_cells, cli%matrix_dimension, &
+    cli%seed, m%true_density &
   )
 
   call print_iterations(changes_per_iteration)
 
   call print_percolation_status(does_percolate, cluster_num)
 
-  call write_data_file(data_file_path, m%inner())
+  call write_data_file(cli%data_file_path, m%inner())
 
   call print_amount_of_clusters_and_size_of_biggest( &
     sorted_clusters%amount_of_clusters, &
@@ -78,10 +71,10 @@ program percolate
   )
 
   call print_amount_of_displayed_clusters( &
-    print_n_clusters, sorted_clusters%amount_of_clusters &
+    cli%print_n_clusters, sorted_clusters%amount_of_clusters &
   )
 
   call write_pgm_file( &
-    pgm_file_path, colors%color_map, print_n_clusters &
+    cli%pgm_file_path, colors%color_map, cli%print_n_clusters &
   )
 end

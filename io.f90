@@ -1,20 +1,152 @@
-module output
+module io
   !
-  ! Module for printing (stdout) and writing (files)
-  ! information.
+  ! Module for printing (stdout), writing (files)
+  ! and the command line interface.
   !
+
+  use help
 
   implicit none
 
   public
 
   integer, private                  :: IOUNIT  = 12
-  integer, parameter, private       :: FMT_LEN = 32
-  character(len = FMT_LEN), private :: FMT_STRING
+  integer, parameter, private       :: STR_LEN = 32
+  character(len = STR_LEN), private :: FMT_STRING
+  character(len = STR_LEN), private :: CLI_OPT
+  character(len = STR_LEN), private :: CLI_IN
+
+  type :: CLIResults
+    integer :: matrix_dimension = 20
+    integer :: seed = 1564
+    integer :: print_n_clusters = 20 ** 2
+    real    :: density_of_filled_cells = .4
+    character(:), allocatable :: data_file_path
+    character(:), allocatable :: pgm_file_path
+  end type
 
   private write_pgm_header
+  private parse_command_to_int
+  private parse_command_to_real
+  private read_command_value
 
 contains
+
+  type(CLIResults) function read_from_cli() result(cli)
+    !
+    ! Function reading the command line arguments.
+    !
+    ! Use percolate -h for more infos.
+    !
+
+    integer :: i
+
+    logical :: print_n_clusters_set = .false.
+
+    cli%data_file_path = "map.dat"
+    cli%pgm_file_path  = "map.pgm"
+
+    i = 1
+    do
+      call get_command_argument(i, CLI_OPT)
+
+      select case(CLI_OPT)
+
+        case("--length", "-l")
+          call read_command_value(i)
+
+          cli%matrix_dimension = parse_command_to_int()
+
+          if (.not. print_n_clusters_set) then
+            cli%print_n_clusters = cli%matrix_dimension ** 2
+          end if
+
+        case("--density", "-d")
+          call read_command_value(i)
+
+          cli%density_of_filled_cells = parse_command_to_real()
+
+        case("--seed", "-s")
+          call read_command_value(i)
+
+          cli%seed = parse_command_to_int()
+
+        case("--print_n_clusters", "-p")
+          call read_command_value(i)
+
+          cli%print_n_clusters = parse_command_to_int()
+
+          print_n_clusters_set = .true.
+
+        case("--data_file_path")
+          call read_command_value(i)
+          cli%data_file_path = trim(cli_in)
+
+        case("--pgm_file_path")
+          call read_command_value(i)
+          cli%pgm_file_path = trim(cli_in)
+
+        case("--help", "-h")
+          call write_help_msg()
+          stop
+
+        case("")
+          exit
+
+        case default
+          write (*, *) "Command line arguments are wrong. &
+                       See -h, --help for further information."
+          stop
+      end select
+
+      if (i == command_argument_count()) exit
+      i = i + 1
+    end do
+  end
+
+
+  subroutine read_command_value(i)
+    integer, intent(inout) :: i
+
+    i = i + 1
+    call get_command_argument(i, CLI_IN)
+  end
+
+
+  integer function parse_command_to_int() result(res)
+    integer :: stat
+
+    read (CLI_IN, *, iostat = stat) res
+
+    if (stat /= 0) then
+      write (*, *) "Could not parse: ", trim(CLI_OPT), &
+                   ": ", CLI_IN
+      stop
+    end if
+  end
+
+
+  real function parse_command_to_real() result(res)
+    integer :: stat
+
+    read (CLI_IN, *, iostat = stat) res
+
+    if (stat /= 0) then
+      write (*, *) "Could not parse: ", trim(CLI_OPT), &
+                   ": ", CLI_IN
+      stop
+    end if
+  end
+
+
+  subroutine write_help_msg()
+    integer :: i
+
+    do i = 1, size(HELP_MSG)
+      write (*, *) HELP_MSG(i)
+    end do
+  end
+
 
   subroutine write_data_file(path, inner_map)
     !
