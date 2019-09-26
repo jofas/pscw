@@ -2,10 +2,9 @@ FC=           gfortran
 FFLAGS=       -O3
 EXE=          percolate
 INSTALL_PATH= /usr/bin/
-FSRC=         uni.f90 map_class.f90 sorted_clusters_class.f90 \
-			        color_map_class.f90 help.f90 io.f90 percolate.f90
-OBJ=          $(FSRC:.f90=.o)
-
+FSRC=         src/uni.f90 src/map_class.f90 src/sorted_clusters_class.f90 \
+			        src/color_map_class.f90 src/help.f90 src/io.f90 src/percolate.f90
+OBJ=          $(FSRC:src/%.f90=%.o)
 
 .PHONY: all
 all: $(EXE) clean
@@ -24,4 +23,4 @@ $(EXE): $(OBJ)
 	@echo Done making $(EXE).
 
 $(OBJ): $(FSRC)
-	@$(FC) -c $^
+	$(FC) -c $^
