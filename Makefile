@@ -23,4 +23,4 @@ $(EXE): $(OBJ)
 	@echo Done making $(EXE).
 
 $(OBJ): $(FSRC)
-	$(FC) -c $^
+	@$(FC) -c $^
