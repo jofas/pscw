@@ -21,8 +21,8 @@ module io
     integer :: seed = 1564
     integer :: print_n_clusters = 20 ** 2
     real    :: density_of_filled_cells = .4
-    character(:), allocatable :: data_file_path
-    character(:), allocatable :: pgm_file_path
+    character(len = STR_LEN) :: data_file_path
+    character(len = STR_LEN) :: pgm_file_path
   end type
 
   private write_pgm_header
@@ -114,6 +114,13 @@ contains
 
 
   integer function parse_command_to_int() result(res)
+    !
+    ! Function parsing CLI_IN to an integer.
+    !
+    ! If the parsing fails, the program is stopped and an
+    ! error message is displayed.
+    !
+
     integer :: stat
 
     read (CLI_IN, *, iostat = stat) res
@@ -127,6 +134,13 @@ contains
 
 
   real function parse_command_to_real() result(res)
+    !
+    ! Function parsing CLI_IN to a real.
+    !
+    ! If the parsing fails, the program is stopped and an
+    ! error message is displayed.
+    !
+
     integer :: stat
 
     read (CLI_IN, *, iostat = stat) res
@@ -156,8 +170,8 @@ contains
     ! last column.
     !
 
-    character(:), allocatable,     intent(in) :: path
-    integer,      dimension(:, :), intent(in) :: inner_map
+    character(len = STR_LEN), intent(in) :: path
+    integer, dimension(:, :), intent(in) :: inner_map
 
     integer :: inner_map_size, j
 
@@ -189,9 +203,9 @@ contains
     ! column wise, beginning with the last column.
     !
 
-    character(:), allocatable,     intent(in) :: path
-    integer,      dimension(:, :), intent(in) :: colors
-    integer,                       intent(in) :: amount_of_clusters
+    character(len = STR_LEN), intent(in) :: path
+    integer, dimension(:, :), intent(in) :: colors
+    integer, intent(in) :: amount_of_clusters
 
     integer :: color_size, j
 
