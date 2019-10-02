@@ -38,6 +38,10 @@ contains
     !
     ! Use percolate -h for more infos.
     !
+    ! If parsing the command line arguments fails, the
+    ! execution is stopped and an error message is
+    ! displayed.
+    !
 
     integer :: i
 
@@ -57,6 +61,9 @@ contains
 
           cli%matrix_dimension = parse_command_to_int()
 
+          ! if print_n_clusters is not set by the command
+          ! line interface, it is overridden and set to
+          ! "all".
           if (.not. print_n_clusters_set) then
             cli%print_n_clusters = cli%matrix_dimension ** 2
           end if
