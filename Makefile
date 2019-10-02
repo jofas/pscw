@@ -21,7 +21,7 @@ clean:
 .PHONY: help
 help:
 	@echo "all:     compile $(EXE). This is the default rule"
-	@echo "         that gets executed."
+	@echo "         that gets executed when using make."
 	@echo
 	@echo "clean:   remove all object and module files generated"
 	@echo	"         during the build process."
