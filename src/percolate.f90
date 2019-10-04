@@ -54,25 +54,29 @@ program percolate
     m, sorted_clusters%cluster_ids, cli%print_n_clusters &
   )
 
-  call print_params_and_actual_density( &
-    cli%density_of_filled_cells, cli%matrix_dimension, &
-    cli%seed, m%true_density &
-  )
+  if (cli%verbose) then
+    call print_params_and_actual_density( &
+      cli%density_of_filled_cells, cli%matrix_dimension, &
+      cli%seed, m%true_density &
+    )
 
-  call print_iterations(changes_per_iteration)
+    call print_iterations(changes_per_iteration)
 
-  call print_percolation_status(does_percolate, cluster_num)
+    call print_percolation_status(does_percolate, cluster_num)
+  end if
 
   call write_data_file(cli%data_file_path, m%inner())
 
-  call print_amount_of_clusters_and_size_of_biggest( &
-    sorted_clusters%amount_of_clusters, &
-    sorted_clusters%cluster_sizes(1)    &
-  )
+  if (cli%verbose) then
+    call print_amount_of_clusters_and_size_of_biggest( &
+      sorted_clusters%amount_of_clusters, &
+      sorted_clusters%cluster_sizes(1)    &
+    )
 
-  call print_amount_of_displayed_clusters( &
-    cli%print_n_clusters, sorted_clusters%amount_of_clusters &
-  )
+    call print_amount_of_displayed_clusters( &
+      cli%print_n_clusters, sorted_clusters%amount_of_clusters &
+    )
+  end if
 
   call write_pgm_file( &
     cli%pgm_file_path, colors%color_map, cli%print_n_clusters &

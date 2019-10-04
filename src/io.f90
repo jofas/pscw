@@ -8,15 +8,15 @@ module io
 
   implicit none
 
-  public
+  private
 
-  integer, private                  :: IOUNIT  = 12
-  integer, parameter, private       :: STR_LEN = 32
-  character(len = STR_LEN), private :: FMT_STRING
-  character(len = STR_LEN), private :: CLI_OPT
-  character(len = STR_LEN), private :: CLI_IN
+  integer                  :: IOUNIT  = 12
+  integer, parameter       :: STR_LEN = 32
+  character(len = STR_LEN) :: FMT_STRING
+  character(len = STR_LEN) :: CLI_OPT
+  character(len = STR_LEN) :: CLI_IN
 
-  type :: CLIResults
+  type, public :: CLIResults
     !
     ! Object containing the values for the cli options.
     !
@@ -25,24 +25,28 @@ module io
     integer :: seed
     integer :: print_n_clusters
     real    :: density_of_filled_cells
+    logical :: verbose
     character(len = STR_LEN) :: data_file_path
     character(len = STR_LEN) :: pgm_file_path
   contains
+    procedure, private :: parse_argument
     procedure, private :: set_default
   end type
 
-  private write_pgm_header
-  private parse_command_to_int
-  private parse_command_to_real
-  private read_command_value
+  public read_from_cli
+  public write_data_file
+  public write_pgm_file
+  public print_params_and_actual_density
+  public print_iterations
+  public print_percolation_status
+  public print_amount_of_clusters_and_size_of_biggest
+  public print_amount_of_displayed_clusters
 
 contains
 
-  type(CLIResults) function read_from_cli() result(cli)
+  type(CLIResults) function read_from_cli() result(self)
     !
-    ! Constructor function for CLIResults instance.
-    !
-    ! Function reads the command line arguments.
+    ! Function which reads the command line arguments.
     !
     ! Use percolate -h for more infos.
     !
@@ -55,83 +59,97 @@ contains
 
     logical :: print_n_clusters_set = .false.
 
-    call cli%set_default()
+    call self%set_default()
 
     i = 1
     do
       call get_command_argument(i, CLI_OPT)
 
-      select case(CLI_OPT)
+      call self%parse_argument(i, print_n_clusters_set)
 
-        case("--length", "-l")
-          call read_command_value(i)
-
-          cli%matrix_dimension = parse_command_to_int()
-
-          ! if print_n_clusters is not set by the command
-          ! line interface, it is overridden and set to
-          ! "all".
-          if (.not. print_n_clusters_set) then
-            cli%print_n_clusters = cli%matrix_dimension ** 2
-          end if
-
-        case("--density", "-d")
-          call read_command_value(i)
-
-          cli%density_of_filled_cells = parse_command_to_real()
-
-        case("--seed", "-s")
-          call read_command_value(i)
-
-          cli%seed = parse_command_to_int()
-
-        case("--print_n_clusters", "-p")
-          call read_command_value(i)
-
-          cli%print_n_clusters = parse_command_to_int()
-
-          print_n_clusters_set = .true.
-
-        case("--data_file_path")
-          call read_command_value(i)
-          cli%data_file_path = trim(cli_in)
-
-        case("--pgm_file_path")
-          call read_command_value(i)
-          cli%pgm_file_path = trim(cli_in)
-
-        case("--help", "-h")
-          call write_help_msg()
-          stop
-
-        case("--version")
-          call write_version()
-          stop
-
-        case("")
-          exit
-
-        case default
-          write (*, *) "Command line arguments are wrong. &
-                       See -h, --help for further information."
-          stop
-      end select
-
-      if (i == command_argument_count()) exit
+      ! >=, to catch no commands
+      if (i >= command_argument_count()) exit
       i = i + 1
     end do
+  end
+
+
+  subroutine parse_argument(self, i, print_n_clusters_set)
+    class(CLIResults), intent(inout) :: self
+    integer, intent(inout) :: i
+    logical, intent(inout) :: print_n_clusters_set
+
+    select case(CLI_OPT)
+
+      case("--length", "-l")
+        call read_command_value(i)
+
+        self%matrix_dimension = parse_command_to_int()
+
+        ! if print_n_clusters is not set by the command
+        ! line interface, it is overridden and set to
+        ! "all".
+        if (.not. print_n_clusters_set) then
+          self%print_n_clusters = self%matrix_dimension ** 2
+        end if
+
+      case("--density", "-d")
+        call read_command_value(i)
+
+        self%density_of_filled_cells = parse_command_to_real()
+
+      case("--seed", "-s")
+        call read_command_value(i)
+
+        self%seed = parse_command_to_int()
+
+      case("--print_n_clusters", "-p")
+        call read_command_value(i)
+
+        self%print_n_clusters = parse_command_to_int()
+
+        print_n_clusters_set = .true.
+
+      case("--verbose", "-v")
+        self%verbose = .true.
+
+      case("--data_file_path")
+        call read_command_value(i)
+        self%data_file_path = trim(cli_in)
+
+      case("--pgm_file_path")
+        call read_command_value(i)
+        self%pgm_file_path = trim(cli_in)
+
+      case("--help", "-h")
+        call write_help_msg()
+        stop
+
+      case("--version")
+        call write_version()
+        stop
+
+      case("")
+        return
+
+      case default
+        write (*, *) "Command line arguments are wrong. &
+                     See -h, --help for further information."
+        stop
+    end select
   end
 
 
   subroutine set_default(self)
     class(CLIResults), intent(out) :: self
 
-    self%matrix_dimension = 20
-    self%seed = 1564
-    self%print_n_clusters = 20 ** 2
+    self%matrix_dimension        = 20
+    self%seed                    = 1564
+    self%print_n_clusters        = 20 ** 2
     self%density_of_filled_cells = .4
-    self%data_file_path = "map.dat"
-    self%pgm_file_path  = "map.pgm"
+    self%verbose                 = .false.
+    self%data_file_path          = "map.dat"
+    self%pgm_file_path           = "map.pgm"
   end
 
 

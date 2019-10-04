@@ -8,7 +8,7 @@ module cli_info
 
   character(len=6), parameter :: VERSION = "v0.1.0"
 
-  character(len=53), dimension(39) :: HELP_MSG = (/ &
+  character(len=53), dimension(46) :: HELP_MSG = (/ &
   "percolate " // VERSION // &
   "                                    ", &
   "                                                    ", &
@@ -22,6 +22,13 @@ module cli_info
   "                                                    ", &
   "    -h, --help                 Prints this help mes-", &
   "                               sage.                ", &
+  "                                                    ", &
+  "        --version              Prints the version of", &
+  "                               this program.        ", &
+  "                                                    ", &
+  "    -v, --verbose              If flag is provided, ", &
+  "                               more information is  ", &
+  "                               printed to stdout.   ", &
   "                                                    ", &
   "    -l, --length INT           Sets the dimension of", &
   "                               the matrix.          ", &
