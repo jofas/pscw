@@ -4,7 +4,7 @@ module io
   ! and the command line interface.
   !
 
-  use help
+  use cli_info
 
   implicit none
 
@@ -17,12 +17,18 @@ module io
   character(len = STR_LEN), private :: CLI_IN
 
   type :: CLIResults
-    integer :: matrix_dimension = 20
-    integer :: seed = 1564
-    integer :: print_n_clusters = 20 ** 2
-    real    :: density_of_filled_cells = .4
+    !
+    ! Object containing the values for the cli options.
+    !
+
+    integer :: matrix_dimension
+    integer :: seed
+    integer :: print_n_clusters
+    real    :: density_of_filled_cells
     character(len = STR_LEN) :: data_file_path
     character(len = STR_LEN) :: pgm_file_path
+  contains
+    procedure, private :: set_default
   end type
 
   private write_pgm_header
@@ -34,7 +40,9 @@ contains
 
   type(CLIResults) function read_from_cli() result(cli)
     !
-    ! Function reading the command line arguments.
+    ! Constructor function for CLIResults instance.
+    !
+    ! Function reads the command line arguments.
     !
     ! Use percolate -h for more infos.
     !
@@ -47,8 +55,7 @@ contains
 
     logical :: print_n_clusters_set = .false.
 
-    cli%data_file_path = "map.dat"
-    cli%pgm_file_path  = "map.pgm"
+    call cli%set_default()
 
     i = 1
     do
@@ -97,6 +104,10 @@ contains
           call write_help_msg()
           stop
 
+        case("--version")
+          call write_version()
+          stop
+
         case("")
           exit
 
@@ -109,6 +120,18 @@ contains
       if (i == command_argument_count()) exit
       i = i + 1
     end do
+  end
+
+
+  subroutine set_default(self)
+    class(CLIResults), intent(out) :: self
+
+    self%matrix_dimension = 20
+    self%seed = 1564
+    self%print_n_clusters = 20 ** 2
+    self%density_of_filled_cells = .4
+    self%data_file_path = "map.dat"
+    self%pgm_file_path  = "map.pgm"
   end
 
 
@@ -157,15 +180,6 @@ contains
                    ": ", CLI_IN
       stop
     end if
-  end
-
-
-  subroutine write_help_msg()
-    integer :: i
-
-    do i = 1, size(HELP_MSG)
-      write (*, *) HELP_MSG(i)
-    end do
   end
 
 
