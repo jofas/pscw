@@ -75,6 +75,15 @@ contains
 
 
   subroutine parse_argument(self, i, print_n_clusters_set)
+    !
+    ! subroutine which parses the current command (an a
+    ! corresponding value, if the command needs one).
+    !
+    ! If parsing the command line argument fails, the
+    ! execution is stopped and an error message is dis-
+    ! played.
+    !
+
     class(CLIResults), intent(inout) :: self
     integer, intent(inout) :: i
     logical, intent(inout) :: print_n_clusters_set
