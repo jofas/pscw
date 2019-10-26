@@ -1,5 +1,5 @@
 job:
-  image: openSUSE/leap:15.2
+  image: opensuse/leap:15.2
   script:
     - gfortran -v
     - make test
