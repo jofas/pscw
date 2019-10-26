@@ -5,6 +5,7 @@
 # no executable
 main
 percolate
+test
 
 # no fortran module files
 **/*.mod
