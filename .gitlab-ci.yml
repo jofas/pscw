@@ -1,5 +1,5 @@
 job:
-  image: alpine:3.7
+  image: openSUSE/leap:15.2
   script:
     - gfortran -v
     - make test
