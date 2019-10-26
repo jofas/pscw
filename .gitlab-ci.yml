@@ -1,0 +1,9 @@
+image: "linux"
+
+before_script:
+  - gfortran -v
+  - make test
+
+script:
+  - ./test
+
