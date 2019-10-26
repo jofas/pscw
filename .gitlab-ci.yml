@@ -1,9 +1,6 @@
-image: "linux"
-
-before_script:
-  - gfortran -v
-  - make test
-
-job1:
-  script: "./test"
-
+job:
+  image: alpine:3.7
+  script:
+    - gfortran -v
+    - make test
+    - ./test
