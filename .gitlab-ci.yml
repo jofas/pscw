@@ -3,5 +3,4 @@ job:
   script:
     - zypper --non-interactive install gcc-fortran make
     - gfortran -v
-    - make test
-    - ./test
+    - sh ci_helper.sh
