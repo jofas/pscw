@@ -1,7 +1,7 @@
 job:
   image: opensuse/leap:15.2
   script:
-    - zypper install gcc-fortran --non-interactive
+    - zypper --non-interactive install gcc-fortran
     - gfortran -v
     - make test
     - ./test
