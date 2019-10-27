@@ -146,8 +146,9 @@ contains
     integer, dimension(self%inner_size) :: first_col, last_col
 
     MAX_ITER       = self%inner_size
-    cluster_num    = 0
     does_percolate = .false.
+
+    if(present(cluster_num)) cluster_num = 0
 
     first_col = self%map(:, 1)
     last_col  = self%map(:, MAX_ITER)
@@ -156,7 +157,7 @@ contains
       if (first_col(i) > 0) then
         do j = 1, MAX_ITER
           if (first_col(i) == last_col(j)) then
-            cluster_num = first_col(i)
+            if(present(cluster_num)) cluster_num = first_col(i)
             does_percolate = .true.
             exit
           end if
