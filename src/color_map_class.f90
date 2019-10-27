@@ -77,6 +77,7 @@ contains
 
     integer :: i
 
+    cluster_ranking(:) = n_biggest_clusters
     do i = 1, n_biggest_clusters
       cluster_ranking(cluster_sizes(i)) = i - 1
     end do
