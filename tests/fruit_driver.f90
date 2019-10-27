@@ -9,6 +9,7 @@ program fruit_driver
 
   call init_fruit()
 
+  call test_map_constructor()
   call test_build_clusters()
   call test_does_percolate_horizontically()
   call test_inner()
