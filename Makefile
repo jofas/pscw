@@ -7,7 +7,7 @@ FSRC=         src/uni.f90 src/map_class.f90 src/sorted_clusters_class.f90 \
 OBJ=          $(FSRC:src/%.f90=%.o)
 
 FTST=         tests/tests_util.f90 tests/map_tests.f90 \
-							tests/sorted_clusters_tests.f90
+							tests/sorted_clusters_tests.f90 tests/color_map_tests.f90
 OBJ_TST=      $(FTST:tests/%.f90=%.o)
 
 ##all:     compile $(EXE). This is the default rule that

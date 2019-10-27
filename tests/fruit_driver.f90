@@ -6,6 +6,7 @@ program fruit_driver
   use fruit
   use map_tests
   use sorted_clusters_tests
+  use color_map_tests
 
   call init_fruit()
 
@@ -18,6 +19,9 @@ program fruit_driver
   call test_sorted_clusters_map2()
   call test_sorted_clusters_with_unclustered_map()
   call test_sorted_clusters_arrays_over_amount()
+
+  call test_color_map1()
+  call test_color_map2()
 
   call fruit_summary()
   call fruit_finalize()
