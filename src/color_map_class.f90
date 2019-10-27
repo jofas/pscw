@@ -23,7 +23,7 @@ module color_map_class
 contains
 
   type(ColorMap) function new( &
-    m, cluster_sizes, n_biggest_clusters &
+    m, biggest_clusters, n_biggest_clusters &
   ) result(self)
     !
     ! Constructor function for a ColorMap instance.
@@ -45,14 +45,14 @@ contains
 
     type(Map), intent(in) :: m
     integer, intent(in)   :: n_biggest_clusters
-    integer, dimension(:), intent(in) :: cluster_sizes
+    integer, dimension(:), intent(in) :: biggest_clusters
 
     integer, dimension(m%inner_size ** 2) :: cluster_ranking
 
     allocate(self%color_map(m%inner_size, m%inner_size))
 
     call build_cluster_ranking( &
-      cluster_sizes, n_biggest_clusters, cluster_ranking &
+      biggest_clusters, n_biggest_clusters, cluster_ranking &
     )
 
     call self%build_color_map(m, n_biggest_clusters, cluster_ranking)
@@ -60,7 +60,7 @@ contains
 
 
   subroutine build_cluster_ranking( &
-    cluster_sizes, n_biggest_clusters, cluster_ranking &
+    biggest_clusters, n_biggest_clusters, cluster_ranking &
   )
     !
     ! Subroutine generating the cluster_ranking.
@@ -71,7 +71,7 @@ contains
     ! cluster.
     !
 
-    integer, dimension(:), intent(in)  :: cluster_sizes
+    integer, dimension(:), intent(in)  :: biggest_clusters
     integer,               intent(in)  :: n_biggest_clusters
     integer, dimension(:), intent(out) :: cluster_ranking
 
@@ -79,7 +79,7 @@ contains
 
     cluster_ranking(:) = n_biggest_clusters
     do i = 1, n_biggest_clusters
-      cluster_ranking(cluster_sizes(i)) = i - 1
+      cluster_ranking(biggest_clusters(i)) = i - 1
     end do
   end
 
@@ -104,30 +104,9 @@ contains
     self%color_map(:, :) = n_biggest_clusters
 
     forall ( &
-      j = 1:m%inner_size, &
-      i = 1:m%inner_size, &
-      cluster_in_bound( &
-        i, j, n_biggest_clusters, m, cluster_ranking &
-      ) &
+      j = 1:m%inner_size, i = 1:m%inner_size, m%map(i, j) /= 0 &
     )
       self%color_map(i, j) = cluster_ranking(m%map(i, j))
     end forall
-  end
-
-
-  pure logical function cluster_in_bound( &
-    i, j, n_biggest_clusters, m, cluster_ranking &
-  ) result(in_bound)
-    !
-    ! Function checking if a cell is part of one of the
-    ! n_biggest_clusters or not.
-    !
-
-    integer, intent(in) :: i, j, n_biggest_clusters
-    type(Map), intent(in) :: m
-    integer, dimension(:), intent(in) :: cluster_ranking
-
-    in_bound = m%map(i, j) > 0 .and. &
-      cluster_ranking(m%map(i, j)) < n_biggest_clusters
   end
 end
