@@ -1,4 +1,9 @@
 module sorted_clusters_tests
+  !
+  ! Module containing unit tests for the constructor (the
+  ! only public interface) of the SortedClusters object.
+  !
+
   use fruit
   use sorted_clusters_class
   use tests_util
