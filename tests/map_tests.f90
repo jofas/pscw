@@ -11,18 +11,18 @@ module map_tests
 
   implicit none
 
-  integer, dimension(5, 5) :: GENERATED_MAP = reshape( &
-    [  1,  2,  3,  0,  0 &
-    ,  4,  5,  0,  0,  0 &
-    ,  6,  7,  8,  9,  0 &
-    ,  0, 10,  0,  0, 11 &
-    ,  0,  0,  0,  0, 12 ], [5, 5], order=[2,1] )
-
-  real :: GENERATED_MAP_TRUE_DENSITY = 12.0 / 25.0
-
 contains
 
   subroutine test_map_constructor()
+    integer, dimension(5, 5) :: GENERATED_MAP = reshape( &
+      [  1,  2,  3,  0,  0 &
+      ,  4,  5,  0,  0,  0 &
+      ,  6,  7,  8,  9,  0 &
+      ,  0, 10,  0,  0, 11 &
+      ,  0,  0,  0,  0, 12 ], [5, 5], order=[2,1] )
+
+    real :: GENERATED_MAP_TRUE_DENSITY = 12.0 / 25.0
+
     type(Map) :: m
 
     call rinit(1564)
