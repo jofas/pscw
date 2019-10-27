@@ -1,4 +1,9 @@
 module map_tests
+  !
+  ! Module containing unit tests for the public methods of
+  ! the Map object.
+  !
+
   use fruit
   use map_class
   use tests_util
@@ -27,13 +32,15 @@ contains
 
     m = build_map1()
     call assert_equals( &
-      m%does_percolate_horizontically(cluster_num), .true. &
+      m%does_percolate_horizontically(cluster_num), &
+      MAP1_DOES_PERCOLATE &
     )
-    call assert_equals(cluster_num, 40)
+    call assert_equals(cluster_num, MAP1_CLUSTER_THAT_PERCOLATES)
 
     m = build_map2()
     call assert_equals( &
-      m%does_percolate_horizontically(), .false. &
+      m%does_percolate_horizontically(), &
+      MAP2_DOES_PERCOLATE &
     )
   end
 
@@ -41,9 +48,9 @@ contains
     type(Map) :: m
 
     m = init_map1()
-    call matrices_equal(m%inner(), MAP1(1:10, 1:10))
+    call matrices_equal(m%inner(), MAP1_INNER)
 
     m = init_map2()
-    call matrices_equal(m%inner(), MAP2(1:10, 1:10))
+    call matrices_equal(m%inner(), MAP2_INNER)
   end
 end

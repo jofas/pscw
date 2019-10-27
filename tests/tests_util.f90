@@ -3,8 +3,9 @@ module tests_util
   ! Module containing utility routines and constants for
   ! the use within this test suite.
   !
-  ! It contains two matrices (MAP1, MAP2) and their
-  ! clustered counterparts. MAP1 does percolate, MAP2 not.
+  ! It contains two matrices (MAP1, MAP2), their
+  ! clustered counterparts and some constants describing
+  ! their behavior, e.g. MAP1 does percolate, MAP2 not.
   !
 
   use fruit
@@ -12,7 +13,7 @@ module tests_util
 
   implicit none
 
-  integer, dimension(0:11, 0:11) :: MAP1 = reshape( &
+  integer, dimension(0:11, 0:11), parameter :: MAP1 = reshape( &
     [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 &
     , 0,  1,  2,  0,  0,  3,  0,  0,  0,  4,  0,  0 &
     , 0,  0,  5,  0,  6,  7,  0,  0,  8,  0,  0,  0 &
@@ -42,7 +43,24 @@ module tests_util
     , 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ], &
     shape(MAP1), order=[2, 1])
 
-  integer, dimension(0:11, 0:11) :: MAP2 = reshape( &
+  logical :: MAP1_DOES_PERCOLATE = .true.
+
+  integer :: MAP1_CLUSTER_THAT_PERCOLATES = 40
+
+  integer, dimension(10, 10) :: MAP1_INNER = MAP1(1:10, 1:10)
+
+  integer :: MAP1_AMOUNT_OF_FREE_CELLS = 41
+
+  integer :: MAP1_AMOUNT_OF_CLUSTERS = 5
+
+  integer, dimension(5) :: MAP1_SORTED_IDS = &
+    [40, 12, 41, 39, 4]
+
+  integer, dimension(5) :: MAP1_SORTED_SIZES = &
+    [36, 2, 1, 1, 1]
+
+
+  integer, dimension(0:11, 0:11), parameter :: MAP2 = reshape( &
     [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 &
     , 0,  1,  2,  0,  0,  3,  0,  0,  0,  4,  0,  0 &
     , 0,  0,  5,  0,  6,  7,  0,  0,  8,  0,  0,  0 &
@@ -72,6 +90,20 @@ module tests_util
     , 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ], &
     shape(MAP1), order=[2, 1])
 
+  logical :: MAP2_DOES_PERCOLATE = .false.
+
+  integer, dimension(10, 10) :: MAP2_INNER = MAP2(1:10, 1:10)
+
+  integer :: MAP2_AMOUNT_OF_FREE_CELLS = 41
+
+  integer :: MAP2_AMOUNT_OF_CLUSTERS = 6
+
+  integer, dimension(6) :: MAP2_SORTED_IDS = &
+    [40, 12, 41, 39, 30, 4]
+
+  integer, dimension(6) :: MAP2_SORTED_SIZES = &
+    [35, 2, 1, 1, 1, 1]
+
 contains
 
   subroutine matrices_equal(m1, m2)
@@ -81,6 +113,17 @@ contains
     allocate(l(size(m1, dim=1), size(m1, dim=2)))
 
     l(:, :) = m1(:, :) /= m2(:, :)
+    call assert_equals(count(l), 0)
+  end
+
+
+  subroutine vectors_equal(v1, v2)
+    integer, dimension(:), intent(in) :: v1, v2
+    logical, dimension(:), allocatable :: l
+
+    allocate(l(size(v1)))
+
+    l(:) = v1(:) /= v2(:)
     call assert_equals(count(l), 0)
   end
 

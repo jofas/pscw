@@ -5,12 +5,18 @@
 program fruit_driver
   use fruit
   use map_tests
+  use sorted_clusters_tests
 
   call init_fruit()
 
   call test_build_clusters()
   call test_does_percolate_horizontically()
   call test_inner()
+
+  call test_sorted_clusters_map1()
+  call test_sorted_clusters_map2()
+  call test_sorted_clusters_with_unclustered_map()
+  call test_sorted_clusters_arrays_over_amount()
 
   call fruit_summary()
   call fruit_finalize()
