@@ -2,6 +2,7 @@ FC=           gfortran
 FFLAGS=       -O3
 EXE=          percolate
 INSTALL_PATH= /usr/bin/
+MAIN_FILE=    src/percolate.f90
 FSRC=         src/uni.f90 src/map_class.f90 src/sorted_clusters_class.f90 \
 			        src/color_map_class.f90 src/cli_info.f90 src/io.f90
 OBJ=          $(FSRC:src/%.f90=%.o)
@@ -43,13 +44,24 @@ help: Makefile
 .PHONY: test
 test: test_aux clean
 
+##profile: generates $(EXE) with the -pg flag for use with
+##         gprof.
+##
+.PHONY: profile
+profile: profile_aux clean
+
 .PHONY: test_aux
 test_aux: $(OBJ) fruit.o $(OBJ_TST)
 	@$(FC) $^ tests/fruit_driver.f90 -o test $(FFLAGS)
 	@echo Done making test.
 
+.PHONY: profile_aux
+profile_aux: $(OBJ)
+	@$(FC) $^ $(MAIN_FILE) -o $(EXE) $(FFLAGS) -pg
+	@echo Done making profiler version of $(EXE).
+
 $(EXE): $(OBJ)
-	@$(FC) $^ src/percolate.f90 -o $(EXE) $(FFLAGS)
+	@$(FC) $^ $(MAIN_FILE) -o $(EXE) $(FFLAGS)
 	@echo Done making $(EXE).
 
 $(OBJ): $(FSRC)
