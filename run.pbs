@@ -1,0 +1,15 @@
+#!/bin/bash --login
+
+# PBS job options (name, compute nodes, job time)
+#PBS -N test
+#PBS -l select=1
+#PBS -l walltime=00:10:00
+#PBS -A d171-s2000901
+#PBS -l place=excl
+#PBS -j oe
+
+# Change to the directory that the job was submitted from
+# (remember this should be on the /work filesystem)
+cd $PBS_O_WORKDIR
+
+./percolate -l 750
