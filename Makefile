@@ -1,5 +1,5 @@
 FC=           gfortran
-FFLAGS=       -O3
+FFLAGS=       -O3 -fopenmp
 EXE=          percolate
 INSTALL_PATH= /usr/bin/
 MAIN_FILE=    src/percolate.f90

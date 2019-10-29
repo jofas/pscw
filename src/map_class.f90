@@ -1,5 +1,6 @@
 module map_class
   use uni
+  use omp_lib
 
   implicit none
 
@@ -19,7 +20,6 @@ module map_class
     procedure :: does_percolate_horizontically
     procedure :: inner
     procedure, private :: free_random_cells_and_set_true_density
-    procedure, private :: set_cell_to_max_neighbor
   end type
 
   interface Map
@@ -90,6 +90,13 @@ contains
 
     integer :: changes, i, max_iter
 
+    real :: start_cshift, start_forall, start_do
+    real :: sum_cshift, sum_forall, sum_do
+
+    sum_cshift = .0
+    sum_forall = .0
+    sum_do     = .0
+
     allocate(old_map(self%inner_size + 2, self%inner_size + 2))
 
     ! manhattan distance from one end of the matrix diagonal to the
@@ -101,7 +108,17 @@ contains
       changes = 0
       old_map = self%map
 
-      call self%set_cell_to_max_neighbor()
+      start_cshift = omp_get_wtime()
+      call set_cell_to_max_neighbor_cshift(self%map)
+      sum_cshift = sum_cshift + omp_get_wtime() - start_cshift
+
+      start_forall = omp_get_wtime()
+      call set_cell_to_max_neighbor_forall(self%map)
+      sum_forall = sum_forall + omp_get_wtime() - start_forall
+
+      start_do = omp_get_wtime()
+      call set_cell_to_max_neighbor_do(self%map)
+      sum_do = sum_do + omp_get_wtime() - start_do
 
       changes = sum(self%map - old_map)
       changes_per_iteration_temp(i) = changes
@@ -109,23 +126,56 @@ contains
       if (changes == 0) exit
     end do
 
+    print *, "CSHIFT ", sum_cshift
+    print *, "FORALL ", sum_cshift
+    print *, "DO     ", sum_cshift
+
     allocate(changes_per_iteration(i))
     changes_per_iteration(:) = changes_per_iteration_temp(:i)
 
-    deallocate(old_map)
-    deallocate(changes_per_iteration_temp)
+    deallocate(old_map, changes_per_iteration_temp)
   end
 
-  subroutine set_cell_to_max_neighbor(self)
-    class(Map), intent(inout) :: self
+  subroutine set_cell_to_max_neighbor_cshift(map)
+    integer, dimension(:, :), intent(inout) :: map
 
-    where (self%map /= 0)
-      self%map = max( cshift(self%map, shift=-1, dim=1) &
-                    , cshift(self%map, shift= 1, dim=1) &
-                    , cshift(self%map, shift=-1, dim=2) &
-                    , cshift(self%map, shift= 1, dim=2) &
-                    , self%map )
+    where (map /= 0)
+      map = max( cshift(map, shift=-1, dim=1) &
+               , cshift(map, shift= 1, dim=1) &
+               , cshift(map, shift=-1, dim=2) &
+               , cshift(map, shift= 1, dim=2) &
+               , map )
     end where
+  end
+
+  subroutine set_cell_to_max_neighbor_forall(map)
+    integer, dimension(:, :), intent(inout) :: map
+    integer :: i, j, n
+
+    n = size(map, dim=1) - 1
+
+    forall(j=1:n, i=1:n, map(i, j) /= 0)
+      map(i, j) = max( map(i-1, j), map(i+1, j) &
+                     , map(i, j-1), map(i, j+1) &
+                     , map(i, j) )
+    end forall
+  end
+
+  subroutine set_cell_to_max_neighbor_do(map)
+    integer, dimension(:, :), intent(inout) :: map
+    integer :: i, j, n
+
+    n = size(map, dim=1) - 1
+
+    do j = 1,n
+      do i = 1,n
+        if (map(i, j) /= 0) then
+          map(i, j) = max( map(i-1, j), map(i+1, j) &
+                         , map(i, j-1), map(i, j+1) &
+                         , map(i, j) )
+        end if
+      end do
+    end do
   end
 
   logical function does_percolate_horizontically(self, cluster_num) &

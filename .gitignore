@@ -12,3 +12,6 @@ test
 
 # no helper script for displaying .pgm files
 display.sh
+
+# no profiling script
+gmon.out
