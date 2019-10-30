@@ -23,6 +23,8 @@ program percolate
   use io
   use uni
 
+  use omp_lib
+
   implicit none
 
   type(CLIResults) :: cli
@@ -34,21 +36,35 @@ program percolate
   integer :: cluster_num
   logical :: does_percolate
 
+  real :: start_map, start_sort, start_color
+
   cli = read_from_cli()
 
   call rinit(cli%seed)
+
+  start_map = omp_get_wtime()
 
   m = Map(cli%matrix_dimension, cli%density_of_filled_cells)
   changes_per_iteration = m%build_clusters()
   does_percolate = m%does_percolate_horizontically(cluster_num)
 
+  print *, "TIME MAP: ", omp_get_wtime() - start_map
+
+  start_sort = omp_get_wtime()
+
   sorted_clusters = SortedClusters(m)
 
+  print *, "TIME SORT: ", omp_get_wtime() - start_sort
+
   call reset_print_n_clusters_if_not_enough_clusters()
+
+  start_color = omp_get_wtime()
 
   colors = ColorMap( &
     m, sorted_clusters%cluster_ids, cli%print_n_clusters &
   )
+
+  print *, "TIME COLOR: ", omp_get_wtime() - start_color
 
   call do_output()
 

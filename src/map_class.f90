@@ -108,17 +108,17 @@ contains
       changes = 0
       old_map = self%map
 
-      start_cshift = omp_get_wtime()
+      !start_cshift = omp_get_wtime()
       call set_cell_to_max_neighbor_cshift(self%map)
-      sum_cshift = sum_cshift + omp_get_wtime() - start_cshift
+      !sum_cshift = sum_cshift + omp_get_wtime() - start_cshift
 
-      start_forall = omp_get_wtime()
-      call set_cell_to_max_neighbor_forall(self%map)
-      sum_forall = sum_forall + omp_get_wtime() - start_forall
+      !start_forall = omp_get_wtime()
+      !call set_cell_to_max_neighbor_forall(self%map)
+      !sum_forall = sum_forall + omp_get_wtime() - start_forall
 
-      start_do = omp_get_wtime()
-      call set_cell_to_max_neighbor_do(self%map)
-      sum_do = sum_do + omp_get_wtime() - start_do
+      !start_do = omp_get_wtime()
+      !call set_cell_to_max_neighbor_do(self%map)
+      !sum_do = sum_do + omp_get_wtime() - start_do
 
       changes = sum(self%map - old_map)
       changes_per_iteration_temp(i) = changes
@@ -126,9 +126,9 @@ contains
       if (changes == 0) exit
     end do
 
-    print *, "CSHIFT ", sum_cshift
-    print *, "FORALL ", sum_cshift
-    print *, "DO     ", sum_cshift
+    !print *, "CSHIFT ", sum_cshift
+    !print *, "FORALL ", sum_cshift
+    !print *, "DO     ", sum_cshift
 
     allocate(changes_per_iteration(i))
     changes_per_iteration(:) = changes_per_iteration_temp(:i)
