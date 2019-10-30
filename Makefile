@@ -43,6 +43,7 @@ help: Makefile
 ##
 .PHONY: test
 test: test_aux clean
+	@./test
 
 ##profile: generates $(EXE) with the -pg flag for use with
 ##         gprof.
