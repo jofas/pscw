@@ -9,6 +9,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{tikz}
+\usepackage{pgfplots}
 \usepackage{tabu}
 \usepackage{longtable}
 \usepackage{tabularx}
@@ -34,6 +35,8 @@
     matrix,
     plotmarks
 }
+
+\usepgfplotslibrary{fillbetween}
 
 \def\perc{\texttt{percolate}}
 \def\v{\texttt{v0.1.0}}
@@ -156,5 +159,19 @@
 \caption{caption}
 \end{center}
 \end{figure}
+
+\begin{tikzpicture}
+\begin{axis}
+  \addplot[name path=map, color=black!20] table[header=false, col sep=comma] {data/map_percentage.csv};
+  \addplot[name path=sort, color=black!40] table[header=false, col sep=comma] {data/sort_percentage.csv};
+  \addplot[name path=color, color=black!60] table[header=false, col sep=comma] {data/color_percentage.csv};
+
+  \path[name path=axis] (axis cs:0.009,0) -- (axis cs:0.99,0);
+
+  \addplot[fill=black!20] fill between[of=map and sort];
+  \addplot[fill=black!40] fill between[of=sort and color];
+  \addplot[fill=black!60] fill between[of=color and axis];
+\end{axis}
+\end{tikzpicture}
 
 \end{document}
