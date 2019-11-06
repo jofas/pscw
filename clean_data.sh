@@ -1,1 +1,1 @@
-cat raw_data.txt | python3 data_parser.py | sort -r > data_clean.csv
+cat data/raw.txt | python3 data/parser.py | sort -r > data/clean.csv
