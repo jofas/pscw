@@ -3,7 +3,7 @@
 # PBS job options (name, compute nodes, job time)
 #PBS -N _run
 #PBS -l select=1
-#PBS -l walltime=24:00:00
+#PBS -l walltime=72:00:00
 #PBS -A d171-s2000901
 #PBS -l place=excl
 #PBS -j oe
@@ -16,7 +16,7 @@ make
 
 for i in $(seq 0.01 0.01 0.99); do
   echo RHO: $i
-  for j in $(seq 1 10); do
+  for j in $(seq 1 5); do
     echo SEED: $j
     ./percolate -l 2000 -d $i -s $j -v
   done
