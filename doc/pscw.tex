@@ -61,8 +61,11 @@
 \begin{keywords}
 \end{keywords}
 
-
+\begin{figure}[htbp]
 \begin{center}
+
+% density -> time_sum {{{
+\begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -74,9 +77,11 @@
   data[headline={x, y}, read from file=data/density_time_sum.csv, set=d]
   ;
 \end{tikzpicture}
-\end{center}
-
-\begin{center}
+\caption{caption}
+\end{subfigure}
+% }}}
+% kde time_sum {{{
+\begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -87,9 +92,14 @@
   data[headline={x, y}, read from file=data/kde_time_sum.csv, set=d]
   ;
 \end{tikzpicture}
-\end{center}
+\caption{caption}
+\end{subfigure}
+% }}}
 
-\begin{center}
+\vspace{1cm}
+
+% density -> num_iter {{{
+\begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -101,9 +111,11 @@
   data[headline={x, y}, read from file=data/density_num_iter.csv, set=d]
   ;
 \end{tikzpicture}
-\end{center}
-
-\begin{center}
+\caption{caption}
+\end{subfigure}
+% }}}
+% kde num_iter {{{
+\begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -114,23 +126,35 @@
   data[headline={x, y}, read from file=data/kde_num_iter.csv, set=d]
   ;
 \end{tikzpicture}
-\end{center}
+\caption{caption}
+\end{subfigure}
+% }}}
 
-\begin{center}
+\vspace{1cm}
+
+% time_sum -> num_iter {{{
+\begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
     visualize as scatter/.list={d},
     visualize as line/.list={d1},
     d={style={mark=x, mark size=1.5pt}},
-    d1={style={visualizer color=black!50}},
+    d1={style={visualizer color=black!50},
+        label in legend={text={linear regression line} }},
     y axis={include value={0}, label={amount of iterations $\#i$}},
     x axis={include value={0}, label={time in seconds $t$}},
+    %legend=below,
   ]
   data[headline={x, y}, read from file=data/time_sum_num_iter.csv, set=d]
   data[headline={x, y}, read from file=data/lin_reg_time_sum_num_iter.csv, set=d1]
   ;
 \end{tikzpicture}
+\caption{caption}
+\end{subfigure}
+% }}}
+\caption{caption}
 \end{center}
+\end{figure}
 
 \end{document}
