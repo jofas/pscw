@@ -38,6 +38,20 @@
 
 \usepgfplotslibrary{fillbetween}
 
+\pgfplotsset{
+  compat=1.3,
+  every non boxed x axis/.style={
+  enlarge x limits=false,
+  x axis line style={}%-stealth},
+  },
+  every boxed x axis/.style={},
+  every non boxed y axis/.style={
+  enlarge y limits=false,
+  y axis line style={}%-stealth},
+  },
+  every boxed y axis/.style={},
+}
+
 \def\perc{\texttt{percolate}}
 \def\v{\texttt{v0.1.0}}
 
@@ -64,9 +78,20 @@
 \begin{keywords}
 \end{keywords}
 
+\section{Introduction} % {{{
+
+% }}}
+
+\section{Method} % {{{
+
+% }}}
+
+\section{Results} % {{{
+
+% 1st part fig {{{
 \begin{figure}[htbp]
 \begin{center}
-
+\noindent
 % density -> time_sum {{{
 \begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
@@ -100,7 +125,7 @@
 % }}}
 
 \vspace{1cm}
-
+\noindent
 % density -> num_iter {{{
 \begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
@@ -134,7 +159,7 @@
 % }}}
 
 \vspace{1cm}
-
+\noindent
 % time_sum -> num_iter {{{
 \begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
@@ -156,22 +181,60 @@
 \caption{caption}
 \end{subfigure}
 % }}}
+
 \caption{caption}
 \end{center}
 \end{figure}
+% }}}
 
-\begin{tikzpicture}
-\begin{axis}
-  \addplot[name path=map, color=black!20] table[header=false, col sep=comma] {data/map_percentage.csv};
-  \addplot[name path=sort, color=black!40] table[header=false, col sep=comma] {data/sort_percentage.csv};
-  \addplot[name path=color, color=black!60] table[header=false, col sep=comma] {data/color_percentage.csv};
+% 2nd part fig {{{
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[scale=0.75] % {{{
+\begin{axis}[
+  tick align=outside,
+  axis x line=bottom,
+  axis y line=left,
+  axis line shift=10pt,
+  xlabel=time in seconds $t$,
+  ylabel=percentage of $t$,
+  label shift=10pt,
+  legend style={
+    at={(2,0.5)},
+    anchor=east,
+    cells={anchor=west},
+    draw=white
+  },
+]
+  \addplot[name path=map, color=black!30] table[header=false, col sep=comma] {data/map_percentage.csv};
+  \addlegendentry{Map}
+  \addplot[name path=sort, color=black!60] table[header=false, col sep=comma] {data/sort_percentage.csv};
+  \addlegendentry{Sort}
+  \addplot[name path=color, color=black!90] table[header=false, col sep=comma] {data/color_percentage.csv};
+  \addlegendentry{Color}
 
   \path[name path=axis] (axis cs:0.009,0) -- (axis cs:0.99,0);
 
-  \addplot[fill=black!20] fill between[of=map and sort];
-  \addplot[fill=black!40] fill between[of=sort and color];
-  \addplot[fill=black!60] fill between[of=color and axis];
+  \addplot[fill=black!30] fill between[of=map and sort];
+  \addplot[fill=black!60] fill between[of=sort and color];
+  \addplot[fill=black!90] fill between[of=color and axis];
 \end{axis}
 \end{tikzpicture}
+% }}}
+\vspace{0.5cm}
+\caption{Caption}
+\end{center}
+\end{figure}
+% }}}
+
+% }}}
+
+\section{Discussion} % {{{
+
+% }}}
+
+\section{Conclusion} % {{{
+
+% }}}
 
 \end{document}
