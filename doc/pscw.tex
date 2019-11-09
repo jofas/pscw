@@ -52,7 +52,7 @@
   every boxed y axis/.style={},
 }
 
-\def\perc{\texttt{percolate}}
+\def\perc{\texttt{perco\-late}}
 \def\v{\texttt{v0.1.0}}
 
 \def\titl{Programming Skills coursework II b: benchmarking
@@ -61,8 +61,6 @@
 \title{\titl}
 
 \author{}
-%\name Jonas Fassbender
-%        \email jonas@fassbender.dev}
 
 \ShortHeadings{B160509}{B160509}
 \firstpageno{1}
@@ -80,13 +78,175 @@
 
 \section{Introduction} % {{{
 
+This paper documents the results of a benchmark performed
+on \perc{} \v{}.
+\perc{} is a scientific program written in the
+Fortran programming language. It generates a random matrix
+with two kinds of cells: empty and filled.
+Empty cells build clusters with their neighbors and
+\perc{} finds clusters that begin at the first column and
+end at the last.
+If such a cluster exists, the matrix percolates.
+
+One way to configure \perc{} is by setting the density of
+the empty cells.
+This benchmark looks at the behavior of \perc{} with
+different densities of filled cells and how the density
+influences the execution time.
+It consists of two phases.
+During the first phase of the benchmark, the execution time
+of \perc{} with different densities is described and
+analyzed.
+The second phase looks how the execution time splits onto
+subroutines of \perc{} with different densities, to see
+where the bottlenecks lie concerning the execution speed.
+
+The benchmark was performed on the Cirrus supercomputer
+with exclusive access to one back end node
+\citep[see][]{cirrus}.
+The program was compiled with the GNU Fortran Compiler
+(\texttt{gfortran}) version 4.8.5, with the maximum
+optimization provided (optimization level \texttt{O3})
+\citep[see][]{gfortran}.
+
+This paper begins by describing \perc{} \v{} and the
+conducted benchmark.
+Afterwards the results are presented and discussed.
+At last a conclusion is drawn and next steps for a
+follow-up benchmark are outlined.
 % }}}
 
 \section{Method} % {{{
 
+Let $n \in \mathbb{N}$ be a positive integer.
+Let $A: n \times n$ be a matrix,
+$A \in \mathbb{N}_{0}^{n \times n}$.
+Let $A(i, j); 1 \leq i, j \leq n; i, j \in \mathbb{N}$ be
+the cell of $A$ in the $i$th row and the $j$th column.
+Let $S := \{filled, empty\}$ be a binary set containing the
+two states a cell of $A$ can have.
+Let $\sigma: \mathbb{N}_0 \rightarrow S$ be a function that
+maps a cell of $A$ to its state:
+\begin{align*}
+\sigma(x) = \begin{cases}
+  filled &\text{if } x = 0 \\
+  empty  &\text{otherwise}
+\end{cases}.
+\end{align*}
+Let $A': n+2 \times n+2$ be a version of $A$ with a halo
+containing filled cells:
+\begin{align}
+  \label{eq:a'}
+i,j = 0, \dots, n+1: A'(i, j) := \begin{cases}
+  0 &\text{if } i=0 \lor j=0 \lor i=n+1 \lor j=n+1 \\
+  A(i, j) &\text{otherwise}
+\end{cases}.
+\end{align}
+The density of the empty cells $\rho$ of $A$ is determined
+by the following function:
+\begin{align*}
+\rho(A) := \frac{|\{i,j=1,\dots,n: \sigma(A(i,j)) = empty\}|}{n^2}.
+\end{align*}
+
+\perc{} \v{} randomly initializes $A$ and sets $A'$
+according to (\ref{eq:a'}) (see Algorithm~\ref{alg:perc},
+lines 1--2).
+After initialization, clusters in $A'$ are build
+iteratively (see Algorithm~\ref{alg:build_clusters}).
+This is done by setting all empty cells of $A'$ to their
+biggest neighbor.
+Let $\mu:\mathbb{N}_0^{m \times m} \times \mathbb{N} \times
+\mathbb{N} \rightarrow \mathbb{N}_0; m \in \mathbb{N}$ be
+the function returning the biggest value of all neighboring
+cells and the current cell:
+\begin{align*}
+  \mu(A, i, j) := \max(A(i, j), A(i-1, j), A(i+1, j),
+                       A(i, j-1), A(i, j+1)).
+\end{align*}
+The clustering is finished, once no cell changes value
+anymore (see Algorithm~\ref{alg:build_clusters}).
+
+After the clustering the clusters are sorted in descending
+order based on their size
+($size: \mathbb{N}_0^{n \times n} \times \mathbb{N}
+\rightarrow \mathbb{N}_0: size(A, x) :=
+|\{i,j=1,\dots,n: A(i,j) = x\}|$)(see
+Algorithm~\ref{alg:perc}, line 5).
+Sorting is done using the quicksort algorithm
+\citep[see][]{hoare_1961}.
+
+Afterwards every empty cell of $A$ is mapped to its index
+in the array containing the sorted clusters.
+Every filled cell is mapped to $|clusters| + 1$.
+The result of this operation is the color map (see
+Algorithm~\ref{alg:perc}, line 6).
+The color map is needed for writing a Portable Gray Map
+Image (PGM).
+
+After doing this operations, \perc{} writes a log to
+\texttt{stdout} and writes $A$ and the color map to files.
+These io-operations are not measured during the benchmark.
+
+\begin{algorithm}
+  \caption{: \perc{}}
+  \label{alg:perc}
+
+  \begin{algorithmic}[1]
+    \STATE{randomly initialize $A$}
+    \STATE{set $A'$ according to (\ref{eq:a'})}
+    \STATE{build\_clusters($A'$)}
+    \STATE{$A := A'(1:n, 1:n)$}
+    \STATE{sort the clusters based on their size}
+    \STATE{build the color map}
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{: build\_clusters($A'$)}
+  \label{alg:build_clusters}
+
+  \begin{algorithmic}[1]
+    \STATE{$A''(i, j) := 0; i,j = 0,\dots,n+1$}
+    \WHILE{$\Sigma_{i,j=1}^{n}(A'(i,j) - A''(i, j)) \neq 0$}
+      \STATE{$A'' := A'$}
+      \FOR{$i, j=1,\dots,n$}
+        \STATE{$A'(i, j) = \begin{cases}
+          \mu(A', i, j) &\text{if } \sigma(A'(i,j)) = empty
+          \\
+          0 &\text{otherwise}
+        \end{cases}$}
+      \ENDFOR
+    \ENDWHILE
+  \end{algorithmic}
+\end{algorithm}
+
+For the benchmark, $n$ was set to $2000$.
+\perc{} offers an interface which controls the
+initialization behavior.
+One can define a density $\rho_{goal}$ and a seed which is
+passed to the pseudo random number generator.
+During initialization, $\rho_{goal}$ is approximated.
+
+The benchmark ran \perc{} with $\rho_{goal} :=
+0.01,0.02,\dots,0.99$. Every $\rho_{goal}$ was tried with
+five seeds, resulting in 495 distinct measures, with an
+approximately uniform distribution over $\rho$ generated
+during the initialization.
+
+The three operations: clustering, sorting and building the
+color map were measured. The sum of all three measures
+is the execution time (io-operations and initialization
+excluded).
+
+The execution time is measured in seconds.
+OpenMP 4.5's \texttt{omp\_get\_wtime} function was used
+for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
+
 % }}}
 
 \section{Results} % {{{
+
+% TODO: kernel density over density
 
 % 1st part fig {{{
 \begin{figure}[htbp]
@@ -236,5 +396,7 @@
 \section{Conclusion} % {{{
 
 % }}}
+
+\bibliography{pscw.bib}
 
 \end{document}
