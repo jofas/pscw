@@ -91,7 +91,7 @@ If such a cluster exists, the matrix percolates.
 One way to configure \perc{} is by setting the density of
 the empty cells.
 This benchmark looks at the behavior of \perc{} with
-different densities of filled cells and how the density
+different densities of empty cells and how the density
 influences the execution time.
 It consists of two phases.
 During the first phase of the benchmark, the execution time
@@ -121,11 +121,11 @@ follow-up benchmark are outlined.
 Let $n \in \mathbb{N}$ be a positive integer.
 Let $A: n \times n$ be a matrix,
 $A \in \mathbb{N}_{0}^{n \times n}$.
-Let $A(i, j); 1 \leq i, j \leq n; i, j \in \mathbb{N}$ be
+$A(i, j); 1 \leq i, j \leq n; i, j \in \mathbb{N}$ is
 the cell of $A$ in the $i$th row and the $j$th column.
 Let $S := \{filled, empty\}$ be a binary set containing the
-two states a cell of $A$ can have.
-Let $\sigma: \mathbb{N}_0 \rightarrow S$ be a function that
+two states a cell of $A$ can have and let $\sigma:
+\mathbb{N}_0 \rightarrow S$ be a function that
 maps a cell of $A$ to its state:
 \begin{align*}
 \sigma(x) = \begin{cases}
@@ -169,7 +169,7 @@ anymore (see Algorithm~\ref{alg:build_clusters}).
 After the clustering the clusters are sorted in descending
 order based on their size
 ($size: \mathbb{N}_0^{n \times n} \times \mathbb{N}
-\rightarrow \mathbb{N}_0: size(A, x) :=
+\rightarrow \mathbb{N}_0; size(A, x) :=
 |\{i,j=1,\dots,n: A(i,j) = x\}|$)(see
 Algorithm~\ref{alg:perc}, line 5).
 Sorting is done using the quicksort algorithm
@@ -207,7 +207,7 @@ These io-operations are not measured during the benchmark.
 
   \begin{algorithmic}[1]
     \STATE{$A''(i, j) := 0; i,j = 0,\dots,n+1$}
-    \WHILE{$\Sigma_{i,j=1}^{n}(A'(i,j) - A''(i, j)) \neq 0$}
+    \WHILE{$\Sigma_{i,j=1}^{n}(A'(i,j) - A''(i, j)) > 0$}
       \STATE{$A'' := A'$}
       \FOR{$i, j=1,\dots,n$}
         \STATE{$A'(i, j) = \begin{cases}
@@ -234,9 +234,10 @@ approximately uniform distribution over $\rho$ generated
 during the initialization.
 
 The three operations: clustering, sorting and building the
-color map were measured. The sum of all three measures
-is the execution time (io-operations and initialization
-excluded).
+color map were measured (see Algorithm~\ref{alg:perc},
+lines 3ff).
+The sum of all three measures is the execution time
+(io-operations and initialization excluded).
 
 The execution time is measured in seconds.
 OpenMP 4.5's \texttt{omp\_get\_wtime} function was used
@@ -246,14 +247,12 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 
 \section{Results} % {{{
 
-% TODO: kernel density over density
-
 % 1st part fig {{{
 \begin{figure}[htbp]
 \begin{center}
 \noindent
 % density -> time_sum {{{
-\begin{subfigure}[b]{0.49\textwidth}
+\begin{subfigure}[t]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -265,11 +264,12 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   data[headline={x, y}, read from file=data/density_time_sum.csv, set=d]
   ;
 \end{tikzpicture}
-\caption{caption}
+\caption{Scatter plot mapping $\rho$ to the execution time
+  of Algorithm~\ref{alg:perc}.}
 \end{subfigure}
 % }}}
 % kde time_sum {{{
-\begin{subfigure}[b]{0.49\textwidth}
+\begin{subfigure}[t]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -280,14 +280,15 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   data[headline={x, y}, read from file=data/kde_time_sum.csv, set=d]
   ;
 \end{tikzpicture}
-\caption{caption}
+\caption{Gaussian kernel density estimation of the
+  execution time. Clearly shows that
+  Algorithm~\ref{alg:perc} favors extreme
+  times (the function has its maxima at the edges). }
 \end{subfigure}
 % }}}
 
-\vspace{1cm}
-\noindent
 % density -> num_iter {{{
-\begin{subfigure}[b]{0.49\textwidth}
+\begin{subfigure}[t]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -299,11 +300,12 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   data[headline={x, y}, read from file=data/density_num_iter.csv, set=d]
   ;
 \end{tikzpicture}
-\caption{caption}
+\caption{Scatter plot mapping $\rho$ to the amount of
+  iterations of Algorithm~\ref{alg:build_clusters}.}
 \end{subfigure}
 % }}}
 % kde num_iter {{{
-\begin{subfigure}[b]{0.49\textwidth}
+\begin{subfigure}[t]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -314,12 +316,14 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   data[headline={x, y}, read from file=data/kde_num_iter.csv, set=d]
   ;
 \end{tikzpicture}
-\caption{caption}
+\caption{Gaussian kernel density estimation of the
+  amount of iterations. Clearly shows that
+  Algorithm~\ref{alg:build_clusters} favors extreme amounts
+  of iterations (the function has its maxima at the edges).
+}
 \end{subfigure}
 % }}}
 
-\vspace{1cm}
-\noindent
 % time_sum -> num_iter {{{
 \begin{subfigure}[b]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
@@ -338,14 +342,43 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   data[headline={x, y}, read from file=data/lin_reg_time_sum_num_iter.csv, set=d1]
   ;
 \end{tikzpicture}
-\caption{caption}
+\caption{Plot showing the correlation of the execution time
+of Algorithm~\ref{alg:perc} and the amounts of iterations
+of Algorithm~\ref{alg:build_clusters}.}
 \end{subfigure}
 % }}}
 
-\caption{caption}
+\caption{Results of the first phase of the benchmark.}
+\label{fig:p1}
 \end{center}
 \end{figure}
 % }}}
+
+This benchmark consists of two phases.
+The first phase measures the overall execution time (the
+sum of the execution time of the three operations, see
+previous chapter). The density $\rho$ of $A$ is mapped to
+the relating execution time $t$ (measured in seconds).
+The second part looks how the three different operations
+influence the overall execution time, to see how they
+scale and to identify the bottlenecks.
+
+The results of the first phase of the benchmark can be seen
+in Figure~\ref{fig:p1}.
+The relationship between $\rho$ and the execution time
+is clearly not linear---like expected---and rather extreme.
+The program produces a discontinuity like jump at $\rho
+\approx 0.58$.
+The density of the execution time is a second factor that
+makes the measurement extreme.
+Added to this jumping behavior, the distribution of the
+execution time also favors extreme timings.
+This means, not only is there an extreme jump from very
+low execution time to very high, there are also just a
+few time measurements that are close to the average
+execution time.
+
+% TODO: get average, median and stdev of execution time
 
 % 2nd part fig {{{
 \begin{figure}
@@ -383,6 +416,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 % }}}
 \vspace{0.5cm}
 \caption{Caption}
+\label{fig:p2}
 \end{center}
 \end{figure}
 % }}}
