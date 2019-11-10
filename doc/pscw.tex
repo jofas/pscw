@@ -71,9 +71,33 @@
 \maketitle
 
 \begin{abstract}
+  \perc{} \v{} is a scientific program.
+  It generates a random matrix with two kinds of cells:
+  empty and filled.
+  Empty cells build clusters with their neighbors and
+  \perc{} finds clusters that begin at the first column and
+  end at the last.
+  If such a cluster exists, the matrix percolates.
+
+  The benchmark of \perc{} looks at how the program
+  scales with different densities of filled cells.
+  The goal of this benchmark is to find bottlenecks of
+  the execution time, in order to optimize \perc{} in
+  coming releases.
+
+  The benchmark was executed on the Cirrus supercomputer
+  with exclusive access to one back end node.
+  The results of the benchmark show extreme scaling
+  behavior of \perc{}, but successfully exposes the
+  bottleneck.
+
+  This paper discusses the results of the benchmark and
+  gives an outline for optimizing \perc{} in future
+  releases.
 \end{abstract}
 
 \begin{keywords}
+Scientific programming, performance optimization
 \end{keywords}
 
 \section{Introduction} % {{{
@@ -144,9 +168,15 @@ by the following function:
 \rho(A) := \frac{|\{i,j=1,\dots,n: \sigma(A(i,j)) = empty\}|}{n^2}.
 \end{align*}
 
-\perc{} \v{} randomly initializes $A$ and sets $A'$
-according to (\ref{eq:a'}) (see Algorithm~\ref{alg:perc},
-lines 1--2).
+\perc{} \v{} randomly initializes $A$ with empty and
+filled cells.
+The empty cells are taken continuously from the sequence
+$1,2,\dots,n^2$.
+So, after initialization the empty cells of $A$ are
+$1,\dots,|\{i,j=1,\dots,n:\sigma(A(i,j))=empty\}|$, which
+are randomly distributed over $A$.
+Afterwards the program sets $A'$ according to (\ref{eq:a'})
+(see Algorithm~\ref{alg:perc}, lines 1--2).
 After initialization, clusters in $A'$ are build
 iteratively (see Algorithm~\ref{alg:build_clusters}).
 This is done by setting all empty cells of $A'$ to their
@@ -355,20 +385,17 @@ of Algorithm~\ref{alg:build_clusters}.}
 \end{figure}
 % }}}
 
-%This benchmark consists of two phases.
-%The benchmark begins
-First, the overall execution time $t$ in seconds (the sum
+The overall execution time $t$ in seconds (the sum
 of the execution time of the three operations, see previous
-chapter) is measured.
-$t$ is mapped to the density $\rho$ of $A$ (see
-Figure~\ref{fig:p1}).
+chapter) gets mapped onto the corresponding density $\rho$
+of $A$ (see Figure~\ref{fig:p1}).
 The benchmark also looks at how the three different
 measured operations influence $t$, to see how they scale
 and to further underline where the bottlenecks lie.
 
 The relationship between $\rho$ and the execution time
-is clearly not linear---like expected---and rather extreme
-(see Figure~\ref{fig:p1:a}).
+is clearly not linear---like expected---and behaves rather
+extreme (see Figure~\ref{fig:p1:a}).
 The program produces a discontinuity like jump at $\rho
 \approx 0.58$.
 While the overall average $t$ is approximately
@@ -481,21 +508,112 @@ produce very low $t$.
 
 \section{Discussion} % {{{
 
-% crazy jumping behavior
+On the one hand, this benchmark sufficiently answers the
+question, where the performance bottleneck of \perc{} \v{}
+lies.
+Clearly Algorithm~\ref{alg:build_clusters} is the main
+source of computation and therefore execution time.
 
-% bottleneck is clustering
+On the other hand, this benchmark raises the question, why
+the scaling over $\rho$ is not linear and favors such
+extreme $t$, with a abrupt jump at $\rho \approx 0.58$.
+This question is not answered by the benchmark and needs to
+be further evaluated.
 
-% other cause than just iterations (cluster size?)
+The most obvious optimization strategy for \perc{}---based
+on this benchmark---would be to reduce the high execution
+time for more dense $A$.
+
+This could be done by the following possible optimizations:
+\begin{itemize}
+  \item Update $\mu$ to contain the diagonal neighbors as
+        well. This would reduce the amount of iterations,
+        respectively reducing the maximum distance of two
+        cells in the matrix from $n^2$ to $n$.
+
+  \item Parallelizing the inner loop of
+        Algorithm~\ref{alg:build_clusters}.
+
+  \item Not using an iterative approach. Instead of
+        iterating over the matrix, one could use a priority
+        queue, which prioritizes higher $\mathbb{N}$
+        and points to all the empty cells of $A$.
+        This empty cell with the highest value is taken and
+        all neighbors are recursively updated.
+        The updated cells are removed from the queue.
+        If the update process stops, the now highest value
+        from the queue is taken and the update
+        process is done again.
+        This is continued until the queue is empty.
+
+        Since taking the highest value is not even a
+        necessity (it was just used as the criteria for
+        an early return from the while-loop of
+        Algorithm~\ref{alg:build_clusters}), one could
+        even replace the priority queue with a different,
+        more easy to parallelize, data structure to further
+        optimize \perc.
+
+\end{itemize}
+If these proposed optimizations can reduce the execution
+time remains to be tested.
+
+Another open question not answered is the divergence
+between the amount of iterations of the while-loop of
+Algorithm~\ref{alg:build_clusters} and the execution time
+for $\rho > 0.58$
+(see Figures~\ref{fig:p1:a},~\ref{fig:p1:c}).
+While the amount of iterations stays constant on this
+interval, the execution time drops with bigger $\rho$.
+This is suggestive for another factor influencing the
+execution time.
+This benchmark has not tested the amounts of clusters or
+their size and how they influence the execution time,
+which could also be a factor.
 
 % }}}
 
 \section{Conclusion} % {{{
 
-% find better way of clustering
+\perc{} \v{} scales rather extreme and unexpected over
+different densities $\rho$:
 
-% find reason for jump
+\begin{enumerate}
+  \item A discontinuity like jump for $\rho \approx 0.58$.
 
-% follow up benchmark -> look at cluster size
+  \item The scale of the execution time.
+        The average execution time for $\rho > 0.58$ is
+        approximately $639.33$ seconds, while the average
+        execution time for $\rho \leq 0.58$ lies at
+        approximately 14.79 seconds---a staggering 2
+        percent of the average execution time for
+        $\rho > 0.58$.
+
+  \item The distribution of the execution time favors
+        the extremes (both minimum and maximum). 50 percent
+        of all measurements lie in the outer quartiles.
+\end{enumerate}
+
+Even though this benchmark raises some unanswered
+questions (most of all the scaling behavior), it shows the
+bottleneck of the execution time in
+Algorithm~\ref{alg:build_clusters}.
+This allows for precise optimization of \perc{} in order to
+improve its performance, especially for $\rho > 0.58$.
+The previous chapter outlined different approaches, which
+can be taken in order to optimize \perc{}.
+
+On the other hand the unanswered questions must be
+addressed in a follow up benchmark, possibly combined with
+the results of the optimized version of \perc{}, which may
+scale differently.
+
+The next tasks for optimizing \perc{} will be to set up
+a thorough benchmark suite for regression testing, before
+optimizations will be tested (\perc{} \texttt{v0.1.1}).
+Hopefully, \perc{} \texttt{v0.1.2} will already contain
+an optimized version of Algorithm~\ref{alg:build_clusters},
+making it perform and scale better.
 
 % }}}
 
