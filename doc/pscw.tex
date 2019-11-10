@@ -266,6 +266,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 \end{tikzpicture}
 \caption{Scatter plot mapping $\rho$ to the execution time
   of Algorithm~\ref{alg:perc}.}
+\label{fig:p1:a}
 \end{subfigure}
 % }}}
 % kde time_sum {{{
@@ -284,6 +285,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   execution time. Clearly shows that
   Algorithm~\ref{alg:perc} favors extreme
   times (the function has its maxima at the edges). }
+\label{fig:p1:b}
 \end{subfigure}
 % }}}
 
@@ -302,6 +304,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 \end{tikzpicture}
 \caption{Scatter plot mapping $\rho$ to the amount of
   iterations of Algorithm~\ref{alg:build_clusters}.}
+\label{fig:p1:c}
 \end{subfigure}
 % }}}
 % kde num_iter {{{
@@ -321,6 +324,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
   Algorithm~\ref{alg:build_clusters} favors extreme amounts
   of iterations (the function has its maxima at the edges).
 }
+\label{fig:p1:d}
 \end{subfigure}
 % }}}
 
@@ -345,6 +349,7 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 \caption{Plot showing the correlation of the execution time
 of Algorithm~\ref{alg:perc} and the amounts of iterations
 of Algorithm~\ref{alg:build_clusters}.}
+\label{fig:p1:e}
 \end{subfigure}
 % }}}
 
@@ -359,26 +364,51 @@ The first phase measures the overall execution time (the
 sum of the execution time of the three operations, see
 previous chapter). The density $\rho$ of $A$ is mapped to
 the relating execution time $t$ (measured in seconds).
-The second part looks how the three different operations
-influence the overall execution time, to see how they
-scale and to identify the bottlenecks.
+The second phase looks how the three different operations
+influence $t$, to see how they scale and to identify the
+bottlenecks.
 
 The results of the first phase of the benchmark can be seen
 in Figure~\ref{fig:p1}.
 The relationship between $\rho$ and the execution time
-is clearly not linear---like expected---and rather extreme.
+is clearly not linear---like expected---and rather extreme
+(see Figure~\ref{fig:p1:a}).
 The program produces a discontinuity like jump at $\rho
 \approx 0.58$.
-The density of the execution time is a second factor that
-makes the measurement extreme.
-Added to this jumping behavior, the distribution of the
-execution time also favors extreme timings.
+While the overall average $t$ is approximately
+$278.49$ seconds, the average $t$ over all measures where
+$\rho \leq 0.58$ is just approximately $14.79$ seconds,
+while the average $t$ over all measures where $\rho > 0.58$
+is approximately $639.33$ seconds.
+The average of the measurements where $\rho \leq 0.58$ is
+a staggering 2 percent of the average of the measurements
+where $\rho > 0.58$.
+The density of the execution time is a third factor that
+makes the measurement extreme (see Figure~\ref{fig:p1:b}).
+Added to this jumping behavior and the scale, the
+distribution of the execution time also favors extreme
+timings.
+The upper and lower quartiles of the distribution of $t$
+contain 50 percent of all measurements.
 This means, not only is there an extreme jump from very
 low execution time to very high, there are also just a
-few time measurements that are close to the average
-execution time.
+few time measurements that are close to the overall average
+execution time of approximately $278.49$ seconds.
 
-% TODO: get average, median and stdev of execution time
+Figures~\ref{fig:p1:c} and \ref{fig:p1:d} show the same
+relation, $t$ replaced with the amount of iterations $\#i$
+of the while-loop in Algorithm~\ref{alg:build_clusters}.
+The plots look rather similar to each other.
+Figure~\ref{fig:p1:e} shows the relation between $t$ and
+$\#i$ and it is clearly linear.
+The Pearson correlation coefficient is approximately
+$0.999$, very close to a perfect linear relationship,
+making it save to say, that $\#i$ is the main cause for
+$t$.
+The relation is not perfectly linear, because $t$ drops
+slightly with higher $\rho$ ($\rho > 0.58$), while $\#i$
+stays constant for $\rho > 0.58$ (see
+Figures~\ref{fig:p1:a}--\ref{fig:p1:d}).
 
 % 2nd part fig {{{
 \begin{figure}
@@ -389,22 +419,22 @@ execution time.
   axis x line=bottom,
   axis y line=left,
   axis line shift=10pt,
-  xlabel=time in seconds $t$,
+  xlabel=$\rho$,
   ylabel=percentage of $t$,
   label shift=10pt,
   legend style={
-    at={(2,0.5)},
+    at={(2.5,0.5)},
     anchor=east,
     cells={anchor=west},
     draw=white
   },
 ]
   \addplot[name path=map, color=black!30] table[header=false, col sep=comma] {data/map_percentage.csv};
-  \addlegendentry{Map}
+  \addlegendentry{build\_clusters($A'$)}
   \addplot[name path=sort, color=black!60] table[header=false, col sep=comma] {data/sort_percentage.csv};
-  \addlegendentry{Sort}
+  \addlegendentry{sort the clusters}
   \addplot[name path=color, color=black!90] table[header=false, col sep=comma] {data/color_percentage.csv};
-  \addlegendentry{Color}
+  \addlegendentry{build color map}
 
   \path[name path=axis] (axis cs:0.009,0) -- (axis cs:0.99,0);
 
@@ -415,19 +445,63 @@ execution time.
 \end{tikzpicture}
 % }}}
 \vspace{0.5cm}
-\caption{Caption}
+\caption{Percentage of $t$ spent for every measured
+  operation in Algorithm~\ref{alg:perc}.}
 \label{fig:p2}
 \end{center}
 \end{figure}
 % }}}
 
+During the second phase of the benchmark the three
+different operations were measured distinctly to see how
+they scale with different $\rho$.
+The second phase underlines the fact that
+Algorithm~\ref{alg:build_clusters} is the main cause of
+$t$, especially for the extreme high timings
+(for $\rho > 0.58$), where approximately 99 percent of
+the execution time was spent for the clustering (see
+Figure~\ref{fig:p2}).
+
+For the lower densities---which produce very low
+$t$---the clustering takes approximately linearly less with
+lower $\rho$.
+At its lowest point, the clustering only takes
+approximately 45 percent of $t$, while the rest of the time
+is spent sorting the clusters.
+
+The building of the color map is constant over $\rho$.
+The average time spent on building the clusters is 0.05
+seconds and does not deviate much with a standard deviation
+of 0.04 seconds.
+The sorting takes slightly more time than the building of
+the color map, but it is also constant over $\rho$ and
+takes only 0.71 seconds on average with a standard
+deviation of 0.12 seconds.
+Both
+Both operations can be deemed irrelevant to $t$ concerning
+its scale.
+Sorting only plays a role for very low $\rho$ which also
+produce very low $t$.
+
 % }}}
 
 \section{Discussion} % {{{
 
+% crazy jumping behavior
+
+% bottleneck is clustering
+
+% other cause than just iterations (cluster size?)
+
 % }}}
 
 \section{Conclusion} % {{{
+
+% find better way of clustering
+
+% find reason for jump
+
+% follow up benchmark -> look at cluster size
 
 % }}}
 

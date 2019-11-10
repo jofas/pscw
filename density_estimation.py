@@ -41,13 +41,13 @@ def lin_reg():
         reg = LinearRegression()
         reg.fit(X, y)
         #print("mean squared ", reg.score(X, y))
-        #print("pearson r ", pearsonr(X, y)[0][0])
+        print("pearson r ", pearsonr(X, y)[0][0])
 
         p_ = np.array([[0.0], [650.0]])
         pred = reg.predict(p_)
 
-        for x, y in zip(p_[:,0], pred[:,0]):
-            print("{},{}".format(x, y))
+        #for x, y in zip(p_[:,0], pred[:,0]):
+        #    print("{},{}".format(x, y))
 
 
         #plt.plot(p_[:,0], pred)
