@@ -413,6 +413,15 @@ distribution of the execution time also favors extreme
 timings.
 The upper and lower quartiles of the distribution of $t$
 contain 50 percent of all measurements.
+Figure~\ref{fig:p1:b} visualizes the higher probability of
+extreme timings of $t$ with a Gaussian kernel density
+estimation\footnote{Provided by the \texttt{scipy}
+  scientific library \citep[see][]{scipy}. The bandwidth
+  of the estimator was calculated with Scott's Rule
+  \citep[see][]{scott}.}.
+It shows, that it is far more probable to have $t < 200$
+seconds or $t > 500$ seconds, rather than have $t$ in
+between.
 This means, not only is there an extreme jump from very
 low execution time to very high, there are also just a
 few time measurements that are close to the overall average
@@ -426,12 +435,13 @@ Figure~\ref{fig:p1:e} shows the relation between $t$ and
 $\#i$ and it is clearly linear.
 The Pearson correlation coefficient is approximately
 $0.999$, very close to a perfect linear relationship,
-making it save to say, that $\#i$ is the main cause for
+making it save to say, that $\#i$---and therefore
+Algorithm~\ref{alg:build_clusters}---is the main cause for
 $t$.
 The relation is not perfectly linear, because $t$ drops
 slightly with higher $\rho$ ($\rho > 0.58$), while $\#i$
 stays constant over the same interval (see
-Figures~\ref{fig:p1:a}--\ref{fig:p1:d}).
+Figures~\ref{fig:p1:a},~\ref{fig:p1:c}).
 
 % 2nd part fig {{{
 \begin{figure}
