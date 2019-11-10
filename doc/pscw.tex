@@ -93,13 +93,9 @@ the empty cells.
 This benchmark looks at the behavior of \perc{} with
 different densities of empty cells and how the density
 influences the execution time.
-It consists of two phases.
-During the first phase of the benchmark, the execution time
-of \perc{} with different densities is described and
-analyzed.
-The second phase looks how the execution time splits onto
-subroutines of \perc{} with different densities, to see
-where the bottlenecks lie concerning the execution speed.
+The goal is to find the bottlenecks concerning the
+execution time, in order to optimize \perc{} and make it
+perform better, executing faster.
 
 The benchmark was performed on the Cirrus supercomputer
 with exclusive access to one back end node
@@ -164,7 +160,7 @@ cells and the current cell:
                        A(i, j-1), A(i, j+1)).
 \end{align*}
 The clustering is finished, once no cell changes value
-anymore (see Algorithm~\ref{alg:build_clusters}).
+anymore (see Algorithm~\ref{alg:build_clusters}, line 2).
 
 After the clustering the clusters are sorted in descending
 order based on their size
@@ -359,17 +355,17 @@ of Algorithm~\ref{alg:build_clusters}.}
 \end{figure}
 % }}}
 
-This benchmark consists of two phases.
-The first phase measures the overall execution time (the
-sum of the execution time of the three operations, see
-previous chapter). The density $\rho$ of $A$ is mapped to
-the relating execution time $t$ (measured in seconds).
-The second phase looks how the three different operations
-influence $t$, to see how they scale and to identify the
-bottlenecks.
+%This benchmark consists of two phases.
+%The benchmark begins
+First, the overall execution time $t$ in seconds (the sum
+of the execution time of the three operations, see previous
+chapter) is measured.
+$t$ is mapped to the density $\rho$ of $A$ (see
+Figure~\ref{fig:p1}).
+The benchmark also looks at how the three different
+measured operations influence $t$, to see how they scale
+and to further underline where the bottlenecks lie.
 
-The results of the first phase of the benchmark can be seen
-in Figure~\ref{fig:p1}.
 The relationship between $\rho$ and the execution time
 is clearly not linear---like expected---and rather extreme
 (see Figure~\ref{fig:p1:a}).
@@ -407,7 +403,7 @@ making it save to say, that $\#i$ is the main cause for
 $t$.
 The relation is not perfectly linear, because $t$ drops
 slightly with higher $\rho$ ($\rho > 0.58$), while $\#i$
-stays constant for $\rho > 0.58$ (see
+stays constant over the same interval (see
 Figures~\ref{fig:p1:a}--\ref{fig:p1:d}).
 
 % 2nd part fig {{{
@@ -452,15 +448,14 @@ Figures~\ref{fig:p1:a}--\ref{fig:p1:d}).
 \end{figure}
 % }}}
 
-During the second phase of the benchmark the three
-different operations were measured distinctly to see how
-they scale with different $\rho$.
-The second phase underlines the fact that
-Algorithm~\ref{alg:build_clusters} is the main cause of
-$t$, especially for the extreme high timings
-(for $\rho > 0.58$), where approximately 99 percent of
-the execution time was spent for the clustering (see
-Figure~\ref{fig:p2}).
+The fact that Algorithm~\ref{alg:build_clusters} is the
+main reason for $t$---and therefore the bottleneck---is
+underlined by looking at the three different measured
+operations (clustering, sorting and building the color map)
+distinctly.
+Especially for the extreme high timings (for $\rho >
+0.58$), approximately 99 percent of $t$ was spent on the
+clustering (see Figure~\ref{fig:p2}).
 
 For the lower densities---which produce very low
 $t$---the clustering takes approximately linearly less with
@@ -477,7 +472,6 @@ The sorting takes slightly more time than the building of
 the color map, but it is also constant over $\rho$ and
 takes only 0.71 seconds on average with a standard
 deviation of 0.12 seconds.
-Both
 Both operations can be deemed irrelevant to $t$ concerning
 its scale.
 Sorting only plays a role for very low $\rho$ which also
