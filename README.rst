@@ -53,3 +53,22 @@ Command line interface
 
 You can see the command line options of percolate if you
 run ```./percolate -h```.
+
+
+Notes for developers
+--------------------
+
+If you'd like to contribute or extend percolate, there
+is a unit-test test suite for you to use.
+Compile and run it with ```make test```.
+Afterwards, the root directory of this repository will
+contain an executable ```test```, which executes the unit
+tests and can be used for later testing.
+
+percolate also comes with continuous integration setup for
+gitlab_.
+If you fork this repository, just enable gitlab_ pipelines
+and everytime you commit, the unit-test test suite is
+executed.
+
+.. _gitlab: https://gitlab.com/
