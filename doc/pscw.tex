@@ -315,6 +315,8 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 \end{subfigure}
 % }}}
 
+\vspace{1.5cm}
+
 % density -> num_iter {{{
 \begin{subfigure}[t]{0.49\textwidth}
 \begin{tikzpicture}[scale=1]
@@ -354,8 +356,19 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 \end{subfigure}
 % }}}
 
+\vspace{1.5cm}
+
+\caption{Measurements and density estimations for the
+ execution time of Algorithm~\ref{alg:perc} and the amounts
+ of iterations of Algorithm~\ref{alg:build_clusters}.}
+\label{fig:p1}
+\end{center}
+\end{figure}
+% }}}
+
 % time_sum -> num_iter {{{
-\begin{subfigure}[b]{0.49\textwidth}
+\begin{figure}%[b]{0.49\textwidth}
+\begin{center}
 \begin{tikzpicture}[scale=1]
   \datavisualization[
     scientific axes=clean,
@@ -376,11 +389,6 @@ for the time measuring \citep[see][Chapter 3.4.1]{openmp}.
 of Algorithm~\ref{alg:perc} and the amounts of iterations
 of Algorithm~\ref{alg:build_clusters}.}
 \label{fig:p1:e}
-\end{subfigure}
-% }}}
-
-\caption{Results of the first phase of the benchmark.}
-\label{fig:p1}
 \end{center}
 \end{figure}
 % }}}
@@ -619,8 +627,9 @@ the results of the optimized version of \perc{}, which may
 scale differently.
 
 The next tasks for optimizing \perc{} will be to set up
-a thorough benchmark suite for regression testing, before
-optimizations will be tested (\perc{} \texttt{v0.1.1}).
+a thorough benchmarking suite for regression testing,
+before optimizations will be tested (\perc{}
+\texttt{v0.1.1}).
 Hopefully, \perc{} \texttt{v0.1.2} will already contain
 an optimized version of Algorithm~\ref{alg:build_clusters},
 making it perform and scale better.
