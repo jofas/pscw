@@ -36,7 +36,7 @@
     plotmarks
 }
 
-\usepgfplotslibrary{fillbetween}
+\usepgfplotslibrary{fillbetween, statistics}
 
 \pgfplotsset{
   compat=1.3,
@@ -79,21 +79,26 @@
   end at the last.
   If such a cluster exists, the matrix percolates.
 
-  The benchmark of \perc{} looks at how the program
-  scales with different densities of filled cells.
+  The benchmark of \perc{}---presented in this
+  paper---looks at how the program scales with different
+  densities of filled cells.
   The goal of this benchmark is to find bottlenecks of
   the execution time, in order to optimize \perc{} in
-  coming releases.
+  future releases.
 
   The benchmark was executed on the Cirrus supercomputer
   with exclusive access to one back end node.
-  The results of the benchmark show extreme scaling
-  behavior of \perc{}, but successfully exposes the
-  bottleneck.
+  The results of the benchmark show extreme and unresolved
+  scaling behavior over the different densities of empty
+  cells, but successfully exposes the bottleneck.
 
   This paper discusses the results of the benchmark and
   gives an outline for optimizing \perc{} in future
   releases.
+  Also ideas for a follow-up benchmark shining light onto
+  unresolved questions concerning the scaling behavior of
+  \perc{} over different densities of filled cells---raised
+  by this paper---are given.
 \end{abstract}
 
 \begin{keywords}
@@ -113,13 +118,15 @@ end at the last.
 If such a cluster exists, the matrix percolates.
 
 One way to configure \perc{} is by setting the density of
-the empty cells.
+the empty cells, which controls the ratio of empty cells
+contained in the matrix.
+The empty cells are randomly distributed over the matrix.
 This benchmark looks at the behavior of \perc{} with
 different densities of empty cells and how the density
 influences the execution time.
 The goal is to find the bottlenecks concerning the
 execution time, in order to optimize \perc{} and make it
-perform better, executing faster.
+perform better, executing faster, in future releases.
 
 The benchmark was performed on the Cirrus supercomputer
 with exclusive access to one back end node
@@ -132,8 +139,9 @@ optimization provided (optimization level \texttt{O3})
 This paper begins by describing \perc{} \v{} and the
 conducted benchmark.
 Afterwards the results are presented and discussed.
-At last a conclusion is drawn and next steps for a
-follow-up benchmark are outlined.
+At last a conclusion is drawn, possible optimizations are
+outlined and next steps for a follow-up benchmark are
+given.
 % }}}
 
 \section{Method} % {{{
@@ -162,7 +170,8 @@ i,j = 0, \dots, n+1: A'(i, j) := \begin{cases}
   A(i, j) &\text{otherwise}
 \end{cases}.
 \end{align}
-The density of the empty cells $\rho$ of $A$ is determined
+The density of the empty cells $\rho$ (the fraction of
+of all cells being empty) of $A$ is determined
 by the following function:
 \begin{align*}
 \rho(A) := \frac{|\{i,j=1,\dots,n: \sigma(A(i,j)) = empty\}|}{n^2}.
@@ -173,8 +182,9 @@ filled cells.
 The empty cells are taken continuously from the sequence
 $1,2,\dots,n^2$.
 So, after initialization the empty cells of $A$ are
-$1,\dots,|\{i,j=1,\dots,n:\sigma(A(i,j))=empty\}|$, which
-are randomly distributed over $A$.
+set to $1,\dots,|\{i,j=1,\dots,n:\sigma(A(i,j))=empty\}|$,
+which are randomly distributed over $A$.
+
 Afterwards the program sets $A'$ according to (\ref{eq:a'})
 (see Algorithm~\ref{alg:perc}, lines 1--2).
 After initialization, clusters in $A'$ are build
@@ -192,12 +202,15 @@ cells and the current cell:
 The clustering is finished, once no cell changes value
 anymore (see Algorithm~\ref{alg:build_clusters}, line 2).
 
-After the clustering the clusters are sorted in descending
-order based on their size
-($size: \mathbb{N}_0^{n \times n} \times \mathbb{N}
-\rightarrow \mathbb{N}_0; size(A, x) :=
-|\{i,j=1,\dots,n: A(i,j) = x\}|$)(see
-Algorithm~\ref{alg:perc}, line 5).
+After the clustering, the clusters are sorted in descending
+order based on their size (see Algorithm~\ref{alg:perc},
+line 5):
+\begin{align*}
+&size: \mathbb{N}_0^{n \times n} \times \mathbb{N}
+\rightarrow \mathbb{N}_0 \\
+&size(A, x) :=
+|\{i,j=1,\dots,n: A(i,j) = x\}|.
+\end{align*}
 Sorting is done using the quicksort algorithm
 \citep[see][]{hoare_1961}.
 
@@ -209,7 +222,7 @@ Algorithm~\ref{alg:perc}, line 6).
 The color map is needed for writing a Portable Gray Map
 Image (PGM).
 
-After doing this operations, \perc{} writes a log to
+After doing these operations, \perc{} writes a log to
 \texttt{stdout} and writes $A$ and the color map to files.
 These io-operations are not measured during the benchmark.
 
@@ -395,11 +408,12 @@ of Algorithm~\ref{alg:build_clusters}.}
 
 The overall execution time $t$ in seconds (the sum
 of the execution time of the three operations, see previous
-chapter) gets mapped onto the corresponding density $\rho$
+chapter) is correlated with the corresponding density $\rho$
 of $A$ (see Figure~\ref{fig:p1}).
 The benchmark also looks at how the three different
-measured operations influence $t$, to see how they scale
-and to further underline where the bottlenecks lie.
+measured operations influence $t$ separately, to see how
+they scale and to further underline where the bottlenecks
+lie (see Figure~\ref{fig:p2}).
 
 The relationship between $\rho$ and the execution time
 is clearly not linear---like expected---and behaves rather
@@ -461,7 +475,7 @@ Figures~\ref{fig:p1:a},~\ref{fig:p1:c}).
   axis y line=left,
   axis line shift=10pt,
   xlabel=$\rho$,
-  ylabel=percentage of $t$,
+  ylabel=share of $t$,
   label shift=10pt,
   legend style={
     at={(2.5,0.5)},
@@ -486,7 +500,7 @@ Figures~\ref{fig:p1:a},~\ref{fig:p1:c}).
 \end{tikzpicture}
 % }}}
 \vspace{0.5cm}
-\caption{Percentage of $t$ spent for every measured
+\caption{Share of $t$ spent for every measured
   operation in Algorithm~\ref{alg:perc}.}
 \label{fig:p2}
 \end{center}
@@ -548,6 +562,9 @@ This could be done by the following possible optimizations:
         well. This would reduce the amount of iterations,
         respectively reducing the maximum distance of two
         cells in the matrix from $n^2$ to $n$.
+        Since this would change the behavior of \perc{},
+        this optimization will probably not be considered
+        in future releases.
 
   \item Parallelizing the inner loop of
         Algorithm~\ref{alg:build_clusters}.
@@ -556,7 +573,7 @@ This could be done by the following possible optimizations:
         iterating over the matrix, one could use a priority
         queue, which prioritizes higher $\mathbb{N}$
         and points to all the empty cells of $A$.
-        This empty cell with the highest value is taken and
+        The empty cell with the highest value is taken and
         all neighbors are recursively updated.
         The updated cells are removed from the queue.
         If the update process stops, the now highest value
@@ -571,6 +588,14 @@ This could be done by the following possible optimizations:
         even replace the priority queue with a different,
         more easy to parallelize, data structure to further
         optimize \perc.
+
+        This updating strategy could be combined with the
+        sorting, since clusters are build in one continuous
+        operation, which can count the changed elements.
+        After one cluster is built, it can be inserted in
+        a red black tree or a sorted array, based on its
+        size, which could further reduce the execution
+        time.
 
 \end{itemize}
 If these proposed optimizations can reduce the execution

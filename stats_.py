@@ -41,8 +41,8 @@ def stats_split():
         print(mean(lower) / mean(upper))
 
 if __name__ == "__main__":
-    stats_split()
-    #stats(-2)
+    #stats_split()
+    stats(-2)
     #stats(1)
     #stats(2)
     #stats(3)
