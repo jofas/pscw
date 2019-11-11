@@ -16,18 +16,18 @@ Build/install
 If you have a copy of this project, open up a terminal and
 type the following commands, in order to build percolate:
 
-``
-cd path/to/the/project
-make
-make test
-``
+.. code:: bash
+
+    cd path/to/the/project
+    make
+    make test
 
 Once you have done that, optionally, you can also install
 it on your Linux/Unix/Mac operating system:
 
-``
-make install
-``
+.. code:: bash
+
+    make install
 
 Remember that you need certain privileges to install a
 program. Try with ``sudo make install``, if installation
@@ -35,9 +35,9 @@ fails.
 
 For more options and some help with building run:
 
-``
-make help
-``
+.. code:: bash
+
+    make help
 
 
 Run percolate
