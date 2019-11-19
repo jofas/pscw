@@ -199,32 +199,30 @@ cells and the current cell:
   \mu(A, i, j) := \max(A(i, j), A(i-1, j), A(i+1, j),
                        A(i, j-1), A(i, j+1)).
 \end{align*}
-The clustering is finished, once no cell changes value
+The clustering is finished, once no cell changes its value
 anymore (see Algorithm~\ref{alg:build_clusters}, line 2).
 
 After the clustering, the clusters are sorted in descending
 order based on their size (see Algorithm~\ref{alg:perc},
 line 5):
 \begin{align*}
-&size: \mathbb{N}_0^{n \times n} \times \mathbb{N}
-\rightarrow \mathbb{N}_0 \\
-&size(A, x) :=
-|\{i,j=1,\dots,n: A(i,j) = x\}|.
+size(A, x) := |\{i,j=1,\dots,n: A(i,j) = x\}|.
 \end{align*}
-Sorting is done using the quicksort algorithm
+Sorting in \perc{} is done with the quicksort algorithm
 \citep[see][]{hoare_1961}.
 
-Afterwards every empty cell of $A$ is mapped to its index
-in the array containing the sorted clusters.
+Once sorting has finished, every empty cell of $A$ is
+mapped to its index in the array containing the sorted
+clusters.
 Every filled cell is mapped to $|clusters| + 1$.
 The result of this operation is the color map (see
 Algorithm~\ref{alg:perc}, line 6).
 The color map is needed for writing a Portable Gray Map
 Image (PGM).
 
-After doing these operations, \perc{} writes a log to
-\texttt{stdout} and writes $A$ and the color map to files.
-These io-operations are not measured during the benchmark.
+After these operations have finished, \perc{} prints a log
+to \texttt{stdout} and writes $A$ and the color map to
+files.
 
 \begin{algorithm}
   \caption{: \perc{}}
@@ -567,7 +565,13 @@ This could be done by the following possible optimizations:
         in future releases.
 
   \item Parallelizing the inner loop of
-        Algorithm~\ref{alg:build_clusters}.
+        Algorithm~\ref{alg:build_clusters}, for example
+        with OpenMP.
+
+  \item Splitting the matrix into smaller parts and
+        distribute them onto multiple threads/processes
+        as a way of parallelization. This requires a
+        certain communication overhead.
 
   \item Not using an iterative approach. Instead of
         iterating over the matrix, one could use a priority
